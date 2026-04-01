@@ -4,21 +4,19 @@ What 513K lines of leaked source code taught me about building AI agents.
 
 ## What's in This Package
 
-### notes/ — Learning Notes (14 files, ~2800 lines)
+### notes/ — Learning Notes (12 files, ~2600 lines)
 
 The full study journal. Each note covers what I found in the production source, what it means, how it connects to the Berkeley MOOC, and where the sources disagree.
 
 | File | Topic |
 |------|-------|
 | `00-pedagogical-research.md` | Design rationale — why progressive code files, Karpathy method |
-| `00-source-analysis.md` | Initial source reading summary |
-| `00-source-analysis-full.md` | Extended source analysis |
+| `00-source-analysis.md` | Full source analysis: 17 patterns (tutorial vs production) + layer architecture |
 | `00-source-validation-audit.md` | **5-source cross-validation audit** — the core analytical work |
 | `01-tool-loop.md` | Unit 1: max_iterations, is_error, permission before execution |
 | `02-memory.md` | Unit 2: 2-layer architecture, autoDream consolidation |
 | `03-context.md` | Unit 3: LLM vs deterministic compaction, the big discrepancy |
 | `04-coordinator.md` | Unit 4: NL orchestration, "never delegate understanding" |
-| `05-local-router.md` | Unit 5: local routing patterns |
 | `05-prompt-engineering.md` | Unit 5: 44 production prompts analyzed |
 | `06-agent-reliability-triad.md` | The reliability pattern: permissions + memory + context |
 | `07-integration.md` | Unit 6: all layers running together |

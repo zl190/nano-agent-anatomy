@@ -332,7 +332,7 @@ This is the most important section for nano-agent-anatomy's design.
 
 4. **Integration from the start.** nanoGPT's model.py and train.py are independent. nano-agent-anatomy's layers interact at runtime. The roadmap should include integration checkpoints earlier (not just Week 6).
 
-### 3.4 Specific Recommendations for ROADMAP.md
+### 3.4 Specific Recommendations for the Project Roadmap
 
 Based on the research, here are structural changes:
 

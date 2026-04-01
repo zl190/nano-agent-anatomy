@@ -1,7 +1,7 @@
 # Agent Reliability Triad: Three Problems CC Solves
 
 Source: CC TS leaked source (513K lines) + claw-code + experiment data.
-Cross-validated against: Anthropic Academy, Agent SDK, CC TS source, claw-code (4 sources).
+Cross-validated against: Anthropic Docs & Eng Blog, Agent SDK, CC TS source, claw-code (4 sources).
 Berkeley MOOC lecture numbers appear below as suggested reading — they are not cross-validated (lecture content was not extracted or verified against code).
 
 ## The Three Problems
@@ -86,7 +86,7 @@ FileEditTool  → checks readFileState:
 ```
 
 > "Read-before-write is enforced, not advisory. The tool rejects edits if readFileState has no entry for the file, or if the file's mtime is newer than the last read timestamp."
-> — v1 Reader 2 (experiment/v1/reader-2-tools-shell-file.md)
+> — Source reading experiment, Reader 2 analysis of FileEditTool
 
 Model claims "I read the file" without calling FileReadTool → FileEditTool rejects. Physical evidence, not verbal claims.
 

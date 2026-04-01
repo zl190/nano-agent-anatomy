@@ -1,7 +1,7 @@
 # Unit 6: How the Layers Compose
 
 Source: All previous units + CC TS + claw-code
-Cross-validation: CC TS, claw-code, Anthropic Academy, Agent SDK/CCA (4-source)
+Cross-validation: CC TS, claw-code, Anthropic Docs & Eng Blog, Agent SDK (4-source)
 
 ---
 
@@ -97,7 +97,7 @@ This isn't a failure of the curriculum. It's the curriculum. Understanding why t
 | Error recovery + retry with backoff on 529 | Crash on API error | No resilience: one flaky API call ends the session |
 | PreCompact hook (SDK-exposed, external injection) | No hook protocol | No extensibility: compaction algorithm is locked |
 | Rust crate boundary (runtime vs tools vs prompts) | Single flat module | No separation of concerns: loop.py, context.py, coordinator.py all import each other |
-| Cross-layer integration tests (350+ in claw-code) | 4 unit test files | Unit tests verify components; integration tests verify interactions |
+| Cross-layer integration tests (188 in claw-code) | 5 unit test files | Unit tests verify components; integration tests verify interactions |
 
 ---
 

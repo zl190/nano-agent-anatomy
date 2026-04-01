@@ -390,5 +390,5 @@ All notes currently say "Cross-validation: Anthropic Academy, CCA Domain 3, Agen
 - "Three-layer enforcement" — our naming. Anthropic calls it "three-tier permission." The concept is confirmed; the name is ours.
 - "autoDream" — internal name from minified JS bundle. Official term: "memory consolidation" or "structured note-taking."
 
-### MOOC 2025/2026 — still PENDING
-mooc-researcher-2 still running. Will update when results arrive.
+### MOOC 2025/2026 — PENDING
+S25 and F25 slide decks partially audited (see § Source 5 above). Full lecture-by-lecture audit not yet completed.

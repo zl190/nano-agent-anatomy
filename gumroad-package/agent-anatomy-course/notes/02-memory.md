@@ -1,6 +1,6 @@
 # Layer 2: Persistent Memory + autoDream
 
-## Status: Draft (partially validated)
+## Status: Validated (4 sources)
 
 Cross-validation: CC TS source, claw-code, Anthropic Eng Blog ("Effective Context Engineering"), Agent SDK, Berkeley MOOC F24 L2 (Shunyu Yao)
 
@@ -24,13 +24,13 @@ From the leak analysis:
 Memory is NOT append-only. Without consolidation, it fills with contradictions and noise.
 This is the same problem as database compaction — you need a background GC process.
 
-## What we need to study
+## Open questions (not answered by source reading)
 
-- [ ] What's the exact trigger logic for autoDream?
-- [ ] How does it detect contradictions between entries?
-- [ ] What's the index format? (We use markdown, is that what production uses?)
-- [ ] How does MEMORY_SHAPE_TEL telemetry work?
-- [ ] What's EXTRACT_MEMORIES flag do differently from our inline extraction?
+- What's the exact trigger logic for autoDream beyond the 24h+5session threshold?
+- How does it detect contradictions between entries?
+- What's the index format? (We use markdown — is that what production uses?)
+- How does MEMORY_SHAPE_TEL telemetry feed back into consolidation?
+- What does EXTRACT_MEMORIES flag do differently from our inline extraction?
 
 ## MOOC cross-validation (F24 L2 — Shunyu Yao, OpenAI)
 

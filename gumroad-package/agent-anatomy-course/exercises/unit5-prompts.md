@@ -37,4 +37,4 @@ Compare your prompt to any tool description in `loop_v0.py`. How many of CC's pa
 Read `notes/05-prompt-engineering.md` cross-validation table.
 1. Pick one discrepancy between Academy and CC source. Why does this gap exist?
 2. If you were writing a certification exam, would you test CC's approach or Academy's? Why?
-3. The note says "zero coverage in Chinese or English markets." Verify: search for articles about CC's prompt architecture. What did you find?
+3. Search for articles about CC's prompt architecture patterns (NO_TOOLS_PREAMBLE, analysis scratchpad, feature-gated sections). What public documentation exists? What's still undocumented?

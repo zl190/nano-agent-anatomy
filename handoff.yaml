@@ -1,226 +1,270 @@
 version: 2
 meta:
   project: "nano-agent-anatomy"
-  session: 10
-  timestamp: "2026-04-02T15:00:00+1100"
+  session: 11
+  timestamp: "2026-04-02T18:30:00+1100"
   trigger: user
-  context_pct: 35
+  context_pct: 85
   model: "Opus 4.6 (1M context)"
 
-current_task:
-  description: "Session 10 produced v4 XHS content via writer agent. Structure approved, voice not matching user's personal tone."
-  status: in_progress
-  progress: "v4 rendered (7 pages). User said '风格是对了, 不太像我写的'. Voice gap identified: agent writes 'influencer warm', user is 'researcher cold'."
-  next_step: "Calibrate persona with user's actual voice samples (3-5 sentences or extract from existing writing), update xhs-content.md, re-run writer agent for v5"
-  attempted:
-    - "v3 series (session 9): 5 rewrites in main context, all report tone"
-    - "v4 (session 10): isolated writer agent, correct structure but generic influencer voice"
-  blocked_on: "Need user's voice samples to calibrate persona"
+current_task: null
 
 active_blockers:
-  - what: "XHS persona voice mismatch — too influencer, not enough user's personal tone"
-    owner: user
-    action: "User provides 3-5 sentences in their own voice as calibration, or approves voice extraction from conversation history"
+  - what: "Reddit r/ClaudeAI post awaiting mod approval"
+    owner: external
+    action: "Wait for mod approval. If rejected, repost with different flair or in r/artificial"
     since: 2026-04-02
-  - what: "platform-style-hook.sh not in settings.json"
+  - what: "HN account needs karma before Show HN"
+    owner: user
+    action: "Comment on HN posts to build karma over a few days, then post Show HN"
+    since: 2026-04-02
+  - what: "4 blog posts need format gate (have content QC but not publish pipeline gate)"
     owner: agent
-    action: "Add PreToolUse hook entry in next session"
+    action: "Run pre-publish gates on blog-context-degradation, blog-context-pollution, blog-credence-good-berkeley, blog-curriculum-gap"
     since: 2026-04-02
 
 key_concepts:
-  - concept: "Writer agent isolation: spawned agent with only persona context produces better structure but loses user's personal voice"
-  - concept: "User's voice profile: cold, understated, dry irony, drops subjects, minimal words, '一天还差不多' not '三天没怎么睡'"
-  - concept: "last30days → XHS pipeline: trending detection → topic filter → persona writer → gate → render → publish"
-  - concept: "xhs-content-v4.md: 7 pages, '翻了三天CC源码越翻越不对劲', structure approved, voice wrong"
+  - "enforcement vs evaluation: CC has 3 layers for safety (enforcement), zero for quality (evaluation). This is the corrected framing — not 'safety>>quality'"
+  - "pre-package gate: automated script checking markers, paths, references, counts, stale labels before zip"
+  - "preview file = 2x scrutiny: free sample is the most important file in a paid product"
+  - "Gumroad product is 'Agent Anatomy' at yclab.gumroad.com, $19, 20 markdown files"
+  - "launch strategy: repo is top of funnel (free), paid package is backend. HN/Reddit drive to repo, repo README links to Gumroad"
 
 corrections:
-  - previous: "Generic XHS influencer persona is good enough"
-    corrected_to: "Persona must match user's personal voice — cold/understated, not warm/exclamatory"
-    evidence: "User: '风格是对了, 但是不太像我写的'"
-    session: 10
-  - previous: "'三天没怎么睡' is good XHS hook"
-    corrected_to: "Too dramatic for user. '一天还差不多' is their actual register."
-    evidence: "User: '三天没怎么睡, 一天还差不多'"
-    session: 10
+  - previous: "CC源码分析claim: '安全>>质量, Anthropic不管质量'"
+    corrected_to: "CC应用层有enforcement（安全），没有evaluation（质量）。质量投入在模型训练层，不在wrapper层。这是两件不同的事。"
+    evidence: "分析后发现：RLHF/constitutional AI是质量投入，CC hooks系统是quality基础设施。原claim有逻辑跳跃。"
+    session: 11
+  - previous: "05-local-router.md是项目早期规划后来没写完"
+    corrected_to: "文件是打包agent hallucinate出来的。CC源码里没有local router概念。git log显示从未在主repo的notes/出现。"
+    evidence: "git log --all -- '**/*local-router*' only shows gumroad-package commit. CC model selection is per-agent override, not routing."
+    session: 11
+  - previous: "max_turns=25, max_budget_tokens=0 in claw-code"
+    corrected_to: "max_turns=8, max_budget_tokens=2000. Also 'compile-time constant' is false — configurable via with_max_iterations() builder method."
+    evidence: "grep -n in claw-code/src/query_engine.py and conversation.rs"
+    session: 11
+  - previous: "conversation.rs is 585 lines, 350+ tests in claw-code"
+    corrected_to: "584 lines (wc -l verified). 188 #[test] markers (grep -rc verified)."
+    evidence: "Direct source verification"
+    session: 11
 
 user_decisions_verbatim:
-  - quote: "风格是对了, 但是我感觉不太像我写的,哈哈哈, 怎么办"
-    context: "v4 structure approved, voice calibration needed"
-    session: 10
-  - quote: "三天没怎么睡, 一天还差不多"
-    context: "Voice calibration: understated honesty over dramatic hooks"
-    session: 10
-  - quote: "这个管线是不是可以跟last30days连起来, 每天自动发?"
-    context: "Wants automated trending→content→publish pipeline"
-    session: 10
+  - quote: "别管科技博主了, 我们准确接小红书的地气再有点自己的特点就行了"
+    context: "XHS voice direction — accurate + grounded + personal, not tech influencer"
+    session: 11
+  - quote: "pua 你是p8, 你定方案"
+    context: "Delegated all product decisions — quality, pricing, launch strategy"
+    session: 11
+  - quote: "I've been reading all 513K lines — 这句删了可以吗, 没人信你一天把513k lines 全看了"
+    context: "Credibility check on Twitter thread hook. Changed to factual '512K lines across 1,892 files'"
+    session: 11
 
 decisions:
   verified:
-    # Carried from sessions 1-9
-    - claim: "nano-agent-anatomy repo created as study journal"
-      evidence: "Repo live, multiple commits"
-      session: 1
-    - claim: "Blind experiment: v1 (free-form) wins 6-1 over v2 (structured)"
-      evidence: "experiment/report/experiment-report.md"
-      session: 4
-    - claim: "All P0 code progressions written: 15 files, 76 tests"
-      evidence: "Files exist and compile"
-      session: 5
-    - claim: "Gumroad product packaged: $19, ZIP 91KB"
-      evidence: "gumroad-package/agent-anatomy-course.zip exists"
-      session: 8
-    - claim: "XHS renderer: HTML+Playwright, notion-tech theme"
-      evidence: "publish/render_xhs.py exists and produces images"
-      session: 8
-    - claim: "Content must ride CC leak wave — experiment was ON CC source code"
-      evidence: "User confirmed in session 9"
-      session: 9
-    - claim: "Agent builds persona/template infra, writer agent produces content"
-      evidence: "User: '你别自己写'"
-      session: 9
-    - claim: "Pipeline needs per-platform writing step with event-driven hooks"
-      evidence: "User confirmed in session 9"
-      session: 9
-    - claim: "XHS style guide created with persona + template + QC"
-      evidence: "~/.claude/memory/knowledge/output-styles/xhs-content.md exists"
-      session: 9
-    - claim: "Platform style hook created"
-      evidence: "~/.claude/scripts/platform-style-hook.sh exists"
-      session: 9
-    # Session 10 new
-    - claim: "v4 structure and style approved by user"
-      evidence: "User: '风格是对了'"
-      session: 10
-    - claim: "Writer agent isolation produces better structure than main context"
-      evidence: "v4 (agent) vs v3 (main context) comparison — user approved v4 structure"
-      session: 10
-    - claim: "XHS persona needs user's personal voice calibration"
-      evidence: "User: '不太像我写的'"
-      session: 10
+    - claim: "Gumroad product name is 'Agent Anatomy', URL slug 'agent-internals', price $19"
+      evidence: "Product published live on Gumroad, user confirmed"
+      session: 11
+    - claim: "Blog Buy Me a Coffee link at buymeacoffee.com/ylab3, icon in left sidebar"
+      evidence: "SocialLinks component created, pushed to blog repo, deployed"
+      session: 11
+    - claim: "Cloudflare Web Analytics on ylab3.com — automatic setup, no code needed"
+      evidence: "User showed Cloudflare dashboard with automatic setup enabled"
+      session: 11
+    - claim: "cc-fuel-gauge pushed to GitHub with sensor-actuator handoff split"
+      evidence: "git push confirmed, fcf639e on origin/main"
+      session: 11
+    - claim: "Twitter thread posted (6 tweets) from @yclab3"
+      evidence: "Browser automation confirmed, visible on timeline"
+      session: 11
+    - claim: "Reddit r/ClaudeAI post submitted with 'Code Leak Megathread' flair"
+      evidence: "User showed 'awaiting moderator approval' status"
+      session: 11
+    - claim: "XHS v5 content: enforcement/evaluation framing replaces safety>>quality"
+      evidence: "User approved the corrected framing after discussion"
+      session: 11
+    - claim: "Gumroad package passed 2 rounds of independent QC (Opus reviewer)"
+      evidence: "QC pass 1: 6 blocking issues fixed. QC pass 2: 14 issues fixed including factual errors."
+      session: 11
+    - claim: "3 new hooks registered in settings.json: pre-package-gate, publish-gate, preview-scrutiny"
+      evidence: "settings.json edited and validated"
+      session: 11
+    - claim: "7 failure patterns documented in feedback_product-launch-retro.md"
+      evidence: "Memory file written with rules + evidence + application guidance"
+      session: 11
   proposed:
-    - claim: "last30days → XHS auto-publish pipeline for daily automated posting"
-      context: "User asked '是不是可以跟last30days连起来每天自动发', no implementation started"
-      session: 10
-    - claim: "Voice calibration via user writing 3-5 sentences as samples"
-      context: "Proposed as option, user hasn't confirmed method"
-      session: 10
+    - claim: "Gumroad launch-week pricing: $19 now, $29 after April 9"
+      context: "Marketing expert recommended this. User hasn't confirmed the price increase date."
+      session: 11
+    - claim: "Add $0 tier to Gumroad for email capture"
+      context: "Content expert recommended. Not implemented this session."
+      session: 11
+    - claim: "XHS content still needs voice calibration before publishing"
+      context: "v5 has correct framing but voice not yet matched to user's personal style"
+      session: 11
   rejected:
-    - claim: "Generic XHS influencer voice in persona"
-      reason: "User: '不太像我写的'. Voice is too warm/exclamatory."
-      session: 10
-    - claim: "Agent writes content directly in main context"
-      reason: "Session 9: 5 rewrites all report tone"
-      session: 9
+    - claim: "Self-host Plausible on Oracle VM"
+      reason: "User doesn't have Oracle VM. Cloudflare Web Analytics is free and already set up."
+      session: 11
+    - claim: "Reddit API via PRAW for automated posting"
+      reason: "Blocked by Reddit Responsible Builder Policy review requirement"
+      session: 11
 
 discoveries:
-  - fact: "Writer agent isolation solves structure but creates voice gap — clean context has no user voice data"
-    source: "v4 experiment"
-    session: 10
-  - fact: "User's voice is cold: understated observations, dry irony, drops subjects, '一天还差不多' not '三天没怎么睡'"
-    source: "User corrections in session 10"
-    session: 10
-  - fact: "CC leak was global news: VentureBeat, Fortune, Gizmodo, The Register, HN front page"
-    source: "Web search"
-    session: 10
-  # Carried
-  - fact: "XHS title formulas: 5 patterns from 7 爆款帖"
-    source: "Session 9 research"
-    session: 9
-  - fact: "Analytical main context contaminates creative writing"
-    source: "Session 9, 5 failed rewrites"
-    session: 9
+  - fact: "Chrome MCP blocks reddit.com due to safety restrictions"
+    source: "Attempted navigation returned 'This site is not allowed due to safety restrictions'"
+    session: 11
+  - fact: "Reddit requires Responsible Builder Policy review before API app creation (new as of 2026)"
+    source: "User showed error when trying to create Reddit app"
+    session: 11
+  - fact: "HN has no submission API — read-only only. New accounts need karma for Show HN visibility"
+    source: "Research agent confirmed; user showed Create Account page (no existing account)"
+    session: 11
+  - fact: "Gumroad digital downloads average 293 sales; courses average 115 at $95.74; median price $13"
+    source: "WebSearch: 146K Gumroad products analysis (dev.to/solobillions)"
+    session: 11
+  - fact: "No one else is selling CC leak analysis products on Gumroad (blue ocean or no demand)"
+    source: "WebSearch found zero competing products"
+    session: 11
 
 constraints:
   - rule: "No research-institute/research-lab names in public content"
-    reason: "Privacy"
+    reason: "Work project names must not appear in blog, commits, or social posts"
     expires: null
-  - rule: "Each .py file <= 150 lines"
-    reason: "If longer, concept not simplified enough"
+  - rule: "Each .py file must be 150 lines or fewer"
+    reason: "Project rule: if longer, you don't understand the concept well enough"
     expires: null
-  - rule: "Publishing requires template + procedure + independent QC"
-    reason: "User mandated framework compliance"
+  - rule: "Every number in product files must be verified against source (grep/wc -l)"
+    reason: "Session 11 retro: max_turns=25 shipped when actual was 8"
     expires: null
-  - rule: "Gumroad: $19 one-time purchase"
-    reason: "热点窗口 conversion velocity"
+  - rule: "QC gate mandatory before any product packaging or publishing"
+    reason: "Session 11 retro: 25 issues found across 2 QC passes, none would have been caught without QC"
     expires: null
-  - rule: "Agent builds persona/template, writer agent produces content"
-    reason: "Main context too analytical"
-    expires: null
-  - rule: "XHS persona must match user's personal voice, not generic influencer"
-    reason: "User: '不太像我写的'"
+  - rule: "Preview files get 2x scrutiny — every claim, number, and code block verified"
+    reason: "01-tool-loop.md (the free preview) had the most factual errors of any file"
     expires: null
 
 state_changes:
   files_created:
-    - "publish/xhs-content-v4.md"
-    - "publish/images/xhs-carousel-v4/ (7 PNGs)"
-    - "briefs/session10-brief.md"
-    - "briefs/session10-rationale.md"
-  files_modified: []
+    - "publish/xhs-content-v5.md"
+    - "publish/gumroad-listing.md"
+    - "publish/launch-posts.md"
+    - "publish/reddit-r-claudeai.md"
+    - "publish/twitter-thread.md"
+    - "publish/gates/pre-package-gumroad.sh"
+    - "publish/gates/pre-publish-reddit.sh"
+    - "publish/gates/pre-publish-twitter.sh"
+    - "publish/images/gumroad-cover.png"
+    - "publish/images/gumroad-thumbnail.png"
+    - "preview/01-tool-loop.md"
+    - "preview/experiment-report.md"
+    - "~/.claude/scripts/pre-package-gate.sh"
+    - "~/.claude/scripts/preview-scrutiny.sh"
+    - "~/.claude/scripts/publish-gate.sh"
+    - "~/.claude/memory/feedback_product-launch-retro.md"
+  files_modified:
+    - "gumroad-package/agent-anatomy-course/ (13 files: QC fixes)"
+    - "README.md (added preview section + Gumroad link)"
+    - "~/.claude/settings.json (3 new hooks)"
+    - "~/.claude/memory/MEMORY.md (added retro reference)"
+    - "~/Developer/personal/blog/quartz/components/SocialLinks.tsx (created + BMC icon fix)"
+    - "~/Developer/personal/blog/quartz.layout.ts (sidebar links)"
+    - "~/Developer/personal/blog/quartz/components/Footer.tsx (reverted to copyright-only)"
+    - "~/Developer/personal/cc-fuel-gauge/ (sensor-actuator split, 14 tests)"
   services_deployed: []
-  configs_changed: []
+  configs_changed:
+    - "~/.claude/settings.json"
 
 session_log:
+  - session: 11
+    date: 2026-04-02
+    summary: "Session 11: full product launch — Gumroad live, Twitter thread posted, Reddit submitted, 2-round QC, 7 failure patterns documented as hooks"
+    tasks:
+      - task: "Correct XHS v4 claim (safety>>quality → enforcement vs evaluation)"
+        status: done
+        outcome: "v5 written with corrected framing"
+      - task: "Commit all untracked files in nano-agent-anatomy"
+        status: done
+        outcome: "3 commits: briefs, publish pipeline, content+gumroad"
+      - task: "Push cc-fuel-gauge to GitHub"
+        status: done
+        outcome: "sensor-actuator handoff split, 14 tests pass, pushed"
+      - task: "Add Buy Me a Coffee to blog sidebar"
+        status: done
+        outcome: "SocialLinks component + BMC icon fix, pushed"
+      - task: "Set up Cloudflare Web Analytics"
+        status: done
+        outcome: "Already automatic via Cloudflare proxy, no code needed"
+      - task: "QC Gumroad package (2 rounds)"
+        status: done
+        outcome: "Round 1: 6 blocking. Round 2: 14 issues. All fixed."
+      - task: "Launch: Gumroad publish + Twitter thread + Reddit post"
+        status: done
+        outcome: "Gumroad live, 6-tweet thread posted, Reddit awaiting mod"
+      - task: "Build pre-package and publish QC gates"
+        status: done
+        outcome: "3 gate scripts + 3 hooks registered"
+      - task: "Retro: 7 failure patterns → memory + hooks"
+        status: done
+        outcome: "feedback_product-launch-retro.md + 3 settings.json hooks"
   - session: 10
     date: 2026-04-02
-    summary: "Session 10 spawned writer agent for v4, structure approved, voice mismatch identified"
+    summary: "Session 10: writer agent produced v4 XHS content. Structure approved, voice wrong."
     tasks:
-      - task: "Spawn writer agent with XHS persona"
+      - task: "Write XHS content via isolated writer agent"
         status: done
-        outcome: "v4 produced, 7 pages, structure approved"
-      - task: "Finalize XHS content"
-        status: blocked
-        outcome: "Voice doesn't match user — needs calibration"
-      - task: "Check last30days for CC leak"
-        status: done
-        outcome: "Confirmed CC leak is global news, last30days would catch it"
+        outcome: "v4 produced. Structure good, voice too 'tech influencer'"
   - session: 9
-    date: 2026-04-02
-    summary: "Session 9 built XHS infra (persona, hook, pipeline), content not finalized"
+    date: 2026-04-01
+    summary: "Session 9: 5 rewrites of XHS content, all report tone. Discovered writer isolation needed."
     tasks:
-      - task: "See briefs/session9-brief.md"
-        status: done
-        outcome: "XHS style guide, platform hook, pipeline script"
-  - session: 8
-    date: 2026-04-02
-    summary: "Session 8 built gates, renderer, Gumroad product, XHS content failed"
-    tasks:
-      - task: "See briefs/session8-brief.md"
-        status: done
-        outcome: "Gumroad $19, renderer, gates, content blocked"
+      - task: "Rewrite XHS content for platform voice"
+        status: partial
+        outcome: "v1-v3 all report tone. Key insight: writing in analytical context always produces report."
 
 next_steps:
   - priority: P0
-    task: "Calibrate XHS persona with user's actual voice samples"
-    dependency: "User input"
-    context: "Ask for 3-5 sentences or extract from existing writing"
+    task: "Upload zip + description to Gumroad if not done"
+    dependency: "User manual action"
+    context: "Product page is live but may need Content tab zip upload"
   - priority: P0
-    task: "Re-run writer agent with calibrated persona for v5"
-    dependency: "Persona updated"
-    context: null
-  - priority: P0
-    task: "Upload Gumroad ZIP ($19) + set live"
-    dependency: "Human login"
-    context: null
+    task: "Monitor Reddit mod approval and Twitter engagement"
+    dependency: null
+    context: "Reddit may reject — have r/artificial as backup. Twitter thread live."
   - priority: P1
+    task: "Register HN account, build karma (comment on 3-5 posts), then post Show HN"
+    dependency: "HN account created + karma > threshold"
+    context: "Show HN title ready in publish/launch-posts.md"
+  - priority: P1
+    task: "Run publish gates on 4 blog posts before publishing to blog"
+    dependency: null
+    context: "Posts have content QC from session 7 but not format gates"
+  - priority: P1
+    task: "Calibrate XHS persona with user's actual voice, produce v5 for publishing"
+    dependency: "User voice samples"
+    context: "v5 has correct framing (enforcement vs evaluation) but voice not calibrated"
+  - priority: P1
+    task: "Gumroad cover image — current one is minimal, content expert says it matters for CTR"
+    dependency: null
+    context: "Cover generated at publish/images/gumroad-cover.png but could be improved"
+  - priority: P2
+    task: "Add cheatsheet to Gumroad package (1-page: 4 layers + 17 patterns + 4 discrepancies)"
+    dependency: null
+    context: "User asked about it. Adds value without much effort."
+  - priority: P2
+    task: "Restructure Gumroad listing: discrepancies first, file counts last (marketing expert advice)"
+    dependency: null
+    context: "Both experts said: lead with value (discrepancies), not inventory (20 files)"
+  - priority: P2
+    task: "Add $0 Gumroad tier for email capture (content expert advice)"
+    dependency: null
+    context: "First unit free as preview, captures emails for follow-up"
+  - priority: P2
     task: "Register platform-style-hook.sh in settings.json"
-    dependency: "New session"
-    context: null
-  - priority: P1
-    task: "Commit all untracked files"
     dependency: null
-    context: "Large backlog from sessions 8-10"
-  - priority: P1
-    task: "Publish Substack #0"
-    dependency: "Human login"
-    context: null
-  - priority: P2
+    context: "Script exists at ~/.claude/scripts/, not yet registered"
+  - priority: P3
     task: "Build last30days → XHS auto-publish pipeline"
-    dependency: "v5 content finalized first"
-    context: "User wants this, deferred until manual flow works"
-  - priority: P2
-    task: "Write CC leak hub blog"
-    dependency: null
-    context: null
+    dependency: "last30days + XHS MCP + /schedule"
+    context: "User wants automated daily trending → content pipeline"
 
-resume_command: "read ~/Developer/personal/nano-agent-anatomy/briefs/session10-brief.md then execute next steps"
+resume_command: "read /Users/zl190/Developer/personal/nano-agent-anatomy/briefs/session11-brief.md then execute next steps"

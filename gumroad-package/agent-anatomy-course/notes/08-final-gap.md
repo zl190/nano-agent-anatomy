@@ -2,7 +2,7 @@
 
 Summary of all gaps between CC production (513K lines TS+Rust) and nano-agent-anatomy (~1000 lines Python).
 
-Source: CC TS + claw-code + Anthropic Academy + Agent SDK/CCA (4-source cross-validation).
+Source: CC TS + claw-code + Anthropic Docs & Eng Blog + Agent SDK (4-source cross-validation).
 Individual unit gaps: notes/01 through notes/07.
 
 ---
@@ -199,7 +199,7 @@ Structural differences that couldn't be addressed without rewriting the fundamen
 
 ### Dual codebase (Rust + TypeScript)
 
-**Production:** CC has two codebases. TypeScript for the frontend, agent logic, and tool implementations. Rust (via claw-code) for the performance-critical runtime: `conversation.rs` (585 lines), `compact.rs` (485 lines), `permissions.rs` (232 lines). The Rust crate is compiled into the TS application via WASM or native binding.
+**Production:** CC has two codebases. TypeScript for the frontend, agent logic, and tool implementations. Rust (via claw-code) for the performance-critical runtime: `conversation.rs` (584 lines), `compact.rs` (485 lines), `permissions.rs` (232 lines). The Rust crate is compiled into the TS application via WASM or native binding.
 
 **We do:** Single Python module. Everything in one language.
 
@@ -219,13 +219,13 @@ Structural differences that couldn't be addressed without rewriting the fundamen
 
 ### Injectable API client
 
-**Production:** `ConversationRuntime<C, T>` in `conversation.rs` — both the API client and tool executor are traits (interfaces). Tests use `ScriptedApiClient` that returns pre-recorded responses. No API key needed for 200+ unit tests.
+**Production:** `ConversationRuntime<C, T>` in `conversation.rs` — both the API client and tool executor are traits (interfaces). Tests use `ScriptedApiClient` that returns pre-recorded responses. No API key needed for 188 unit tests.
 
 **We do:** Hardcoded `client = Anthropic()`. Tests require a real API key or are mocked at the function level.
 
 **Why the gap:** Dependency injection in Python requires either a framework or careful design. Neither teaches agent concepts.
 
-**Learning value:** Medium. The pattern (injectable client = testable system) is universal. The nano implementation demonstrates why it matters: our 4 test files test much less than production's 200+.
+**Learning value:** Medium. The pattern (injectable client = testable system) is universal. The nano implementation demonstrates why it matters: our 5 test files test much less than production's 188.
 
 ### CLAUDE.md content hashing and deduplication
 

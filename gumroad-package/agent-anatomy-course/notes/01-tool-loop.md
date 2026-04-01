@@ -1,13 +1,13 @@
 # Week 1: The Tool Loop
 
-Source: `claw-code/rust/crates/runtime/src/conversation.rs` (585 lines)
-Python port: `claw-code/src/query_engine.py` (194 lines)
+Source: `claw-code/rust/crates/runtime/src/conversation.rs` (584 lines)
+Python port: `claw-code/src/query_engine.py` (193 lines)
 MOOC: Berkeley CS294 F24 L2 (Shunyu Yao, OpenAI) — ReAct formal definition, validated
 Cross-validation: CC TS source, claw-code, Anthropic Eng Blog (Tool Use API docs), Agent SDK, Berkeley MOOC F24 L2
 
 ## What the production loop actually looks like
 
-The core of every AI agent is a loop: send a message to the LLM, check if it wants to call a tool, execute the tool, send the result back, repeat. Tutorials teach this in 20 lines. Production needs 585.
+The core of every AI agent is a loop: send a message to the LLM, check if it wants to call a tool, execute the tool, send the result back, repeat. Tutorials teach this in 20 lines. Production needs 584.
 
 The difference isn't complexity for its own sake. It's six things tutorials skip.
 
@@ -21,7 +21,7 @@ MAX_ITERATIONS = 16  # conversation.rs default
 
 Tutorials write `while True`. Production writes `for _ in range(16)`. The difference: a buggy tool that always returns "try again" will loop forever in a tutorial agent. In production, it hits 16 and returns a RuntimeError.
 
-This isn't configurable per-request in claw-code. It's a compile-time constant. That's a design choice: the ceiling protects the system from the agent, not from the user.
+In claw-code, this is configurable per-instance via a builder method (`with_max_iterations`), defaulting to 16. The ceiling protects the system from the agent, not from the user.
 
 ### 2. Permission check happens BEFORE execution
 
@@ -40,8 +40,8 @@ Production has an iteration limit, a token budget, AND a server-side pause:
 
 ```python
 # query_engine.py
-max_turns: int = 25        # API call count limit
-max_budget_tokens: int = 0  # token spend limit (0 = unlimited)
+max_turns: int = 8         # API call count limit
+max_budget_tokens: int = 2000  # token spend limit
 ```
 
 When any fires, `stop_reason` tells you which: `max_turns_reached` vs `max_budget_reached` vs `completed` vs `pause_turn`. This is a first-class field on the result, not an exception.
@@ -143,7 +143,7 @@ The production tool loop isn't a loop with tools — it's a **state machine with
 | Token budget as second stop condition | Prevents cost runaway across many short turns | Added in loop_v2.py progression |
 | TurnResult DTO with named stop_reason | Caller knows WHY the loop ended | Adds abstraction without teaching a new concept |
 | Transcript separate from messages | Full history survives compaction | Covered in Unit 3 (context) |
-| Injectable API client (trait/interface) | Enables 200+ unit tests without API keys | Would need dependency injection framework |
+| Injectable API client (trait/interface) | Enables 188 unit tests without API keys | Would need dependency injection framework |
 | Streaming events | Real-time output, partial tool results | Blocking calls are clearer for learning |
 | Tool registry (JSON snapshot at session start) | Tools can be added/removed at runtime | Our 3 tools are static |
 | Retry with backoff (529 pattern) | Handles API rate limits gracefully | Adds error handling complexity |
