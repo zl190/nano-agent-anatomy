@@ -157,11 +157,18 @@ nano-agent-anatomy/
 - No dependencies beyond `anthropic`. Zero-framework understanding.
 - Comments explain why (the production insight), not what (the code is readable).
 
-## Full Course
+## Preview
 
-The code is open. The notes, exercises, cross-validation analysis, and correction log are available as a course:
+Read a full sample note and the blind experiment report before buying anything:
 
-**[Get the full course →](https://zl190.gumroad.com/l/nano-agent-anatomy)**
+- [`preview/01-tool-loop.md`](preview/01-tool-loop.md) — Unit 1: The 6 things tutorials skip about production agent loops
+- [`preview/experiment-report.md`](preview/experiment-report.md) — Blind A/B experiment on source reading methodology
+
+## Full Analysis
+
+The code is open. The detailed notes, exercises, cross-validation audit, and correction log are available separately:
+
+**[Agent Anatomy — Full Analysis →](https://yclab.gumroad.com/l/agent-internals)**
 
 What's in the course that's not in this repo:
 - Full 5-source cross-validation analysis per unit (CC TS × claw-code × Berkeley MOOC × Anthropic Eng Blog × Agent SDK — where they disagree is where the insight is)
