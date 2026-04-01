@@ -1,0 +1,771 @@
+{
+  "reader_id": 5,
+  "subsystem": "State & Persistence",
+  "extraction": {
+    "files_read": 38,
+    "total_lines": 18535,
+    "symbols": [
+      {
+        "name": "AppState",
+        "type": "type",
+        "file": "state/AppStateStore.ts",
+        "signature": "export type AppState = DeepImmutable<{ settings, verbose, mainLoopModel, toolPermissionContext, mcp, plugins, tasks, sessionHooks, ... }> & { tasks: { [taskId: string]: TaskState }, mcp: {...}, plugins: {...}, ... }",
+        "purpose": "The single source of truth for all reactive UI and session state, including settings, permission context, plugins, MCP connections, tasks, memory hooks, and feature flags.",
+        "dependencies": [
+          "Tool.js",
+          "types/message.js",
+          "types/plugin.js",
+          "utils/settings/types.js",
+          "utils/permissions/PermissionMode.js",
+          "utils/permissions/denialTracking.js",
+          "utils/hooks/sessionHooks.js",
+          "utils/fileHistory.js",
+          "utils/commitAttribution.js"
+        ]
+      },
+      {
+        "name": "AppStateStore",
+        "type": "type",
+        "file": "state/AppStateStore.ts",
+        "signature": "export type AppStateStore = Store<AppState>",
+        "purpose": "Type alias for the generic store parameterized with AppState.",
+        "dependencies": [
+          "state/store.ts"
+        ]
+      },
+      {
+        "name": "getDefaultAppState",
+        "type": "function",
+        "file": "state/AppStateStore.ts",
+        "signature": "export function getDefaultAppState(): AppState",
+        "purpose": "Constructs the initial AppState with all defaults, including loading initial settings and computing initial permission mode from teammate context.",
+        "dependencies": [
+          "utils/settings/settings.js",
+          "Tool.js",
+          "utils/thinking.js",
+          "utils/commitAttribution.js",
+          "utils/teammate.js"
+        ]
+      },
+      {
+        "name": "createStore",
+        "type": "function",
+        "file": "state/store.ts",
+        "signature": "export function createStore<T>(initialState: T, onChange?: OnChange<T>): Store<T>",
+        "purpose": "Minimal pub-sub store implementation: holds state, exposes setState with Object.is diffing, and notifies listeners plus an optional onChange side-effect callback.",
+        "dependencies": []
+      },
+      {
+        "name": "Store",
+        "type": "type",
+        "file": "state/store.ts",
+        "signature": "export type Store<T> = { getState: () => T; setState: (updater: (prev: T) => T) => void; subscribe: (listener: Listener) => () => void }",
+        "purpose": "Generic observable state container interface used as the backbone for AppState.",
+        "dependencies": []
+      },
+      {
+        "name": "AppStateProvider",
+        "type": "function",
+        "file": "state/AppState.tsx",
+        "signature": "export function AppStateProvider({ children, initialState, onChangeAppState }): React.ReactNode",
+        "purpose": "React provider that creates the AppStateStore, prevents nesting, integrates settings change watching, and wraps children with MailboxProvider and VoiceProvider.",
+        "dependencies": [
+          "state/store.js",
+          "state/AppStateStore.js",
+          "hooks/useSettingsChange.js",
+          "utils/settings/applySettingsChange.js",
+          "context/mailbox.js"
+        ]
+      },
+      {
+        "name": "onChangeAppState",
+        "type": "function",
+        "file": "state/onChangeAppState.ts",
+        "signature": "export function onChangeAppState({ newState, oldState }: { newState: AppState; oldState: AppState }): void",
+        "purpose": "Side-effect dispatcher wired to the store's onChange callback: syncs permission mode to CCR/SDK, persists model and UI settings to disk, clears auth caches on settings change.",
+        "dependencies": [
+          "utils/settings/settings.js",
+          "utils/config.js",
+          "utils/permissions/PermissionMode.js",
+          "utils/sessionState.js",
+          "bootstrap/state.js"
+        ]
+      },
+      {
+        "name": "selectors",
+        "type": "function",
+        "file": "state/selectors.ts",
+        "signature": "export function getViewedTeammateTask(...): InProcessTeammateTaskState | undefined; export function getActiveAgentForInput(appState: AppState): ActiveAgentForInput",
+        "purpose": "Pure derived-state functions extracting teammate and agent routing information from AppState without side effects.",
+        "dependencies": [
+          "state/AppStateStore.js",
+          "tasks/InProcessTeammateTask/types.js"
+        ]
+      },
+      {
+        "name": "loadMemoryPrompt",
+        "type": "function",
+        "file": "memdir/memdir.ts",
+        "signature": "export async function loadMemoryPrompt(): Promise<string | null>",
+        "purpose": "Dispatches to the correct memory prompt builder based on enabled features (KAIROS daily-log, TEAMMEM combined, or standard auto-memory), returning null when memory is disabled.",
+        "dependencies": [
+          "memdir/paths.js",
+          "memdir/memoryTypes.js",
+          "services/analytics/growthbook.js",
+          "bootstrap/state.js"
+        ]
+      },
+      {
+        "name": "buildMemoryPrompt",
+        "type": "function",
+        "file": "memdir/memdir.ts",
+        "signature": "export function buildMemoryPrompt({ displayName, memoryDir, extraGuidelines? }): string",
+        "purpose": "Constructs the complete memory system prompt including behavioral instructions, type taxonomy, and current MEMORY.md content (synchronously read from disk).",
+        "dependencies": [
+          "memdir/memoryTypes.js",
+          "utils/fsOperations.js"
+        ]
+      },
+      {
+        "name": "buildMemoryLines",
+        "type": "function",
+        "file": "memdir/memdir.ts",
+        "signature": "export function buildMemoryLines(displayName, memoryDir, extraGuidelines?, skipIndex?): string[]",
+        "purpose": "Produces the instructional lines of the memory system prompt without injecting MEMORY.md content, used by both agent memory and the system prompt path.",
+        "dependencies": [
+          "memdir/memoryTypes.js"
+        ]
+      },
+      {
+        "name": "truncateEntrypointContent",
+        "type": "function",
+        "file": "memdir/memdir.ts",
+        "signature": "export function truncateEntrypointContent(raw: string): EntrypointTruncation",
+        "purpose": "Applies the 200-line and 25KB byte caps to MEMORY.md content, appending a warning that names which cap fired.",
+        "dependencies": []
+      },
+      {
+        "name": "ensureMemoryDirExists",
+        "type": "function",
+        "file": "memdir/memdir.ts",
+        "signature": "export async function ensureMemoryDirExists(memoryDir: string): Promise<void>",
+        "purpose": "Idempotently creates the memory directory (recursive mkdir), called once per session before prompt building so the model can always write without checking existence.",
+        "dependencies": [
+          "utils/fsOperations.js"
+        ]
+      },
+      {
+        "name": "isAutoMemoryEnabled",
+        "type": "function",
+        "file": "memdir/paths.ts",
+        "signature": "export function isAutoMemoryEnabled(): boolean",
+        "purpose": "Checks a priority chain (env var CLAUDE_CODE_DISABLE_AUTO_MEMORY \u2192 --bare/SIMPLE \u2192 CCR without persistent storage \u2192 settings.json) to determine whether the memory system is active.",
+        "dependencies": [
+          "bootstrap/state.js",
+          "utils/settings/settings.js",
+          "utils/envUtils.js"
+        ]
+      },
+      {
+        "name": "getAutoMemPath",
+        "type": "function",
+        "file": "memdir/paths.ts",
+        "signature": "export const getAutoMemPath = memoize((): string => {...}, () => getProjectRoot())",
+        "purpose": "Resolves the auto-memory directory via: Cowork env override \u2192 settings.json autoMemoryDirectory \u2192 ~/.claude/projects/<sanitized-git-root>/memory/.",
+        "dependencies": [
+          "bootstrap/state.js",
+          "utils/git.js",
+          "utils/path.js",
+          "utils/settings/settings.js"
+        ]
+      },
+      {
+        "name": "isAutoMemPath",
+        "type": "function",
+        "file": "memdir/paths.ts",
+        "signature": "export function isAutoMemPath(absolutePath: string): boolean",
+        "purpose": "Security guard checking whether a path falls inside the auto-memory directory to grant filesystem write carve-outs to memory files.",
+        "dependencies": []
+      },
+      {
+        "name": "validateMemoryPath",
+        "type": "function",
+        "file": "memdir/paths.ts",
+        "signature": "function validateMemoryPath(raw: string | undefined, expandTilde: boolean): string | undefined",
+        "purpose": "Rejects dangerous memory path overrides (relative, root/near-root, UNC, Windows drive-root, null-byte) before they can become filesystem allow-list roots.",
+        "dependencies": []
+      },
+      {
+        "name": "MemoryType",
+        "type": "type",
+        "file": "memdir/memoryTypes.ts",
+        "signature": "export type MemoryType = 'user' | 'feedback' | 'project' | 'reference'",
+        "purpose": "Closed four-type taxonomy for persistent memory, explicitly excluding derivable code-state information.",
+        "dependencies": []
+      },
+      {
+        "name": "scanMemoryFiles",
+        "type": "function",
+        "file": "memdir/memoryScan.ts",
+        "signature": "export async function scanMemoryFiles(memoryDir: string, signal: AbortSignal): Promise<MemoryHeader[]>",
+        "purpose": "Recursively reads .md memory files, parses frontmatter for type/description, sorts newest-first, and caps at 200 files.",
+        "dependencies": [
+          "memdir/memoryTypes.js",
+          "utils/frontmatterParser.js",
+          "utils/readFileInRange.js"
+        ]
+      },
+      {
+        "name": "findRelevantMemories",
+        "type": "function",
+        "file": "memdir/findRelevantMemories.ts",
+        "signature": "export async function findRelevantMemories(query, memoryDir, signal, recentTools?, alreadySurfaced?): Promise<RelevantMemory[]>",
+        "purpose": "Two-stage recall: scans memory file headers, then asks a Sonnet side-query to select up to 5 relevant files, returning paths with mtimes for freshness display.",
+        "dependencies": [
+          "memdir/memoryScan.js",
+          "utils/sideQuery.js",
+          "utils/model/model.js"
+        ]
+      },
+      {
+        "name": "memoryFreshnessText",
+        "type": "function",
+        "file": "memdir/memoryAge.ts",
+        "signature": "export function memoryFreshnessText(mtimeMs: number): string",
+        "purpose": "Generates a staleness caveat for memories older than 1 day, warning the model to verify code citations before asserting as fact.",
+        "dependencies": []
+      },
+      {
+        "name": "PermissionMode",
+        "type": "type",
+        "file": "utils/permissions/PermissionMode.ts",
+        "signature": "export type PermissionMode = 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions' | 'dontAsk' | 'auto' | 'bubble'",
+        "purpose": "Discriminated union controlling how tool permission decisions are made; 'auto' and 'bubble' are ant-only internal modes not exposed externally.",
+        "dependencies": [
+          "types/permissions.js"
+        ]
+      },
+      {
+        "name": "PermissionRule",
+        "type": "type",
+        "file": "utils/permissions/PermissionRule.ts",
+        "signature": "export type PermissionRule = { behavior: PermissionBehavior; ruleValue: PermissionRuleValue; source: PermissionRuleSource }",
+        "purpose": "A single allow/deny/ask rule binding a behavior to a tool name and optional content pattern, tagged with its originating settings source.",
+        "dependencies": [
+          "types/permissions.js"
+        ]
+      },
+      {
+        "name": "hasPermissionsToUseTool",
+        "type": "const",
+        "file": "utils/permissions/permissions.ts",
+        "signature": "export const hasPermissionsToUseTool: CanUseToolFn = async (tool, input, context, assistantMessage, toolUseID): Promise<PermissionDecision>",
+        "purpose": "Core permission check function that evaluates rules, applies mode transformations (dontAsk\u2192deny, auto\u2192classifier), and handles denial tracking fallback to prompting.",
+        "dependencies": [
+          "utils/permissions/PermissionResult.js",
+          "utils/permissions/PermissionRule.js",
+          "utils/permissions/denialTracking.js",
+          "utils/permissions/classifierDecision.js"
+        ]
+      },
+      {
+        "name": "applyPermissionRulesToPermissionContext",
+        "type": "function",
+        "file": "utils/permissions/permissions.ts",
+        "signature": "export function applyPermissionRulesToPermissionContext(context: ToolPermissionContext, rules: PermissionRule[]): ToolPermissionContext",
+        "purpose": "Merges a flat rule list into the permission context's alwaysAllowRules/alwaysDenyRules/alwaysAskRules collections by behavior.",
+        "dependencies": [
+          "Tool.js"
+        ]
+      },
+      {
+        "name": "DenialTrackingState",
+        "type": "type",
+        "file": "utils/permissions/denialTracking.ts",
+        "signature": "export type DenialTrackingState = { consecutiveDenials: number; totalDenials: number }",
+        "purpose": "Session-scoped counter for classifier denials, used to fall back to interactive prompting when limits (3 consecutive or 20 total) are exceeded.",
+        "dependencies": []
+      },
+      {
+        "name": "DANGEROUS_FILES",
+        "type": "const",
+        "file": "utils/permissions/filesystem.ts",
+        "signature": "export const DANGEROUS_FILES = ['.gitconfig', '.bashrc', '.zshrc', '.mcp.json', '.claude.json', ...]",
+        "purpose": "Allowlist of sensitive files protected from auto-edit, checked in write permission guards.",
+        "dependencies": []
+      },
+      {
+        "name": "DANGEROUS_DIRECTORIES",
+        "type": "const",
+        "file": "utils/permissions/filesystem.ts",
+        "signature": "export const DANGEROUS_DIRECTORIES = ['.git', '.vscode', '.idea', '.claude']",
+        "purpose": "Directories blocked from auto-editing; .claude is included to prevent settings/hooks from being overwritten without permission.",
+        "dependencies": []
+      },
+      {
+        "name": "checkWritePermissionForTool",
+        "type": "function",
+        "file": "utils/permissions/filesystem.ts",
+        "signature": "export function checkWritePermissionForTool<Input extends AnyObject>(...): PermissionResult",
+        "purpose": "Filesystem-level write permission check that validates paths against working directories, dangerous files/dirs, memory path carve-outs, and session-scoped allow rules.",
+        "dependencies": [
+          "utils/permissions/PermissionResult.js",
+          "memdir/paths.js"
+        ]
+      },
+      {
+        "name": "SettingSource",
+        "type": "type",
+        "file": "utils/settings/constants.ts",
+        "signature": "export type SettingSource = 'userSettings' | 'projectSettings' | 'localSettings' | 'flagSettings' | 'policySettings'",
+        "purpose": "Ordered discriminated union of all settings origins; later sources override earlier ones in merge order.",
+        "dependencies": [
+          "bootstrap/state.js"
+        ]
+      },
+      {
+        "name": "settingsChangeDetector",
+        "type": "const",
+        "file": "utils/settings/changeDetector.ts",
+        "signature": "export const settingsChangeDetector = { initialize, dispose, subscribe, notifyChange, resetForTesting }",
+        "purpose": "Chokidar-based file watcher for settings JSON files plus an MDM poll (30min interval), emits SettingSource events to subscribers on external changes.",
+        "dependencies": [
+          "utils/cleanupRegistry.js",
+          "utils/hooks.js",
+          "utils/settings/settingsCache.js",
+          "utils/settings/mdm/settings.js"
+        ]
+      },
+      {
+        "name": "applySettingsChange",
+        "type": "function",
+        "file": "utils/settings/applySettingsChange.ts",
+        "signature": "export function applySettingsChange(source: SettingSource, setAppState: (f: (prev: AppState) => AppState) => void): void",
+        "purpose": "Applies a settings file change to AppState: reads fresh settings, reloads permission rules and hooks config snapshot, strips dangerous Bash rules, and handles bypass-permissions killswitch.",
+        "dependencies": [
+          "utils/settings/settings.js",
+          "utils/permissions/permissionSetup.js",
+          "utils/permissions/permissions.js",
+          "utils/hooks/hooksConfigSnapshot.js"
+        ]
+      },
+      {
+        "name": "resetSettingsCache",
+        "type": "function",
+        "file": "utils/settings/settingsCache.ts",
+        "signature": "export function resetSettingsCache(): void",
+        "purpose": "Clears all three settings caches (session merged, per-source, per-file) atomically; called once by the change detector before notifying N listeners to avoid N-way disk re-reads.",
+        "dependencies": []
+      },
+      {
+        "name": "GlobalConfig",
+        "type": "type",
+        "file": "utils/config.ts",
+        "signature": "export type GlobalConfig = { userID?, theme, numStartups, autoUpdates?, oauthAccount?, primaryApiKey?, verbose, env, autoCompactEnabled, ... }",
+        "purpose": "User-global persistent configuration stored in ~/.claude/claude.json, covering UI preferences, API keys, update settings, and session-agnostic preferences.",
+        "dependencies": []
+      },
+      {
+        "name": "ProjectConfig",
+        "type": "type",
+        "file": "utils/config.ts",
+        "signature": "export type ProjectConfig = { allowedTools, mcpContextUris, mcpServers?, lastAPIDuration?, hasTrustDialogAccepted?, activeWorktreeSession?, ... }",
+        "purpose": "Per-project persistent configuration embedded in GlobalConfig.projects map, tracking MCP settings, session metrics, trust dialog state, and worktree sessions.",
+        "dependencies": []
+      },
+      {
+        "name": "getProjectDir",
+        "type": "const",
+        "file": "utils/sessionStorage.ts",
+        "signature": "export const getProjectDir = memoize((projectDir: string): string => join(getProjectsDir(), sanitizePath(projectDir)))",
+        "purpose": "Memoized function that maps a cwd string to its sanitized project storage directory under ~/.claude/projects/.",
+        "dependencies": [
+          "utils/path.js"
+        ]
+      },
+      {
+        "name": "getTranscriptPath",
+        "type": "function",
+        "file": "utils/sessionStorage.ts",
+        "signature": "export function getTranscriptPath(): string",
+        "purpose": "Returns the JSONL transcript file path for the current session, honoring session project directory override set on resume/branch.",
+        "dependencies": [
+          "bootstrap/state.js"
+        ]
+      },
+      {
+        "name": "buildConversationChain",
+        "type": "function",
+        "file": "utils/sessionStorage.ts",
+        "signature": "export function buildConversationChain(messages: Map<UUID, TranscriptMessage>, leafMessage: TranscriptMessage): TranscriptMessage[]",
+        "purpose": "Reconstructs the conversation chain by walking parentUuid pointers from leaf to root, with DAG recovery for parallel tool-use sibling messages.",
+        "dependencies": [
+          "types/message.js"
+        ]
+      },
+      {
+        "name": "recordTranscript",
+        "type": "function",
+        "file": "utils/sessionStorage.ts",
+        "signature": "export async function recordTranscript(messages, teamInfo?, startingParentUuidHint?, allMessages?): Promise<UUID | null>",
+        "purpose": "Appends new messages to the session JSONL, deduplicating already-recorded messages while preserving parentUuid chain integrity across compaction.",
+        "dependencies": [
+          "utils/sessionStorage.js",
+          "types/logs.js"
+        ]
+      },
+      {
+        "name": "SessionHooksState",
+        "type": "type",
+        "file": "utils/hooks/sessionHooks.ts",
+        "signature": "export type SessionHooksState = Map<string, SessionStore>",
+        "purpose": "In-memory Map of session-scoped hooks (keyed by sessionId) holding per-event matchers for both HookCommand (file-based) and FunctionHook (callback-based) hooks; deliberately uses Map to avoid O(N\u00b2) updates under parallel agent spawning.",
+        "dependencies": []
+      },
+      {
+        "name": "loadAllPlugins",
+        "type": "const",
+        "file": "utils/plugins/pluginLoader.ts",
+        "signature": "export const loadAllPlugins = memoize(async (): Promise<PluginLoadResult> => {...})",
+        "purpose": "Memoized full plugin load: clones/fetches marketplaces, assembles enabled/disabled sets with dependency resolution, caches to session, and warms the cache-only variant.",
+        "dependencies": [
+          "utils/plugins/marketplaceManager.js",
+          "utils/plugins/pluginDirectories.js"
+        ]
+      },
+      {
+        "name": "performBackgroundPluginInstallations",
+        "type": "function",
+        "file": "services/plugins/PluginInstallationManager.ts",
+        "signature": "export async function performBackgroundPluginInstallations(setAppState: SetAppState): Promise<void>",
+        "purpose": "Background reconciler that diffs declared vs materialized marketplaces, installs/updates them with progress events reflected to AppState, and auto-refreshes plugins or sets needsRefresh.",
+        "dependencies": [
+          "utils/plugins/marketplaceManager.js",
+          "utils/plugins/reconciler.js",
+          "utils/plugins/refresh.js"
+        ]
+      },
+      {
+        "name": "useSettings",
+        "type": "function",
+        "file": "hooks/useSettings.ts",
+        "signature": "export function useSettings(): ReadonlySettings",
+        "purpose": "React hook providing reactive access to AppState.settings; updates whenever settings change on disk via the change detector pipeline.",
+        "dependencies": [
+          "state/AppState.js"
+        ]
+      },
+      {
+        "name": "useSettingsChange",
+        "type": "function",
+        "file": "hooks/useSettingsChange.ts",
+        "signature": "export function useSettingsChange(onChange: (source: SettingSource, settings: SettingsJson) => void): void",
+        "purpose": "React hook subscribing to settingsChangeDetector events; reads fresh merged settings and invokes the callback on any file-system or MDM settings change.",
+        "dependencies": [
+          "utils/settings/changeDetector.js",
+          "utils/settings/settings.js"
+        ]
+      },
+      {
+        "name": "useManagePlugins",
+        "type": "function",
+        "file": "hooks/useManagePlugins.ts",
+        "signature": "export function useManagePlugins({ enabled? }): void",
+        "purpose": "React hook that performs the initial plugin load on mount (including delisted plugin enforcement and flagged notifications), and shows a notification when needsRefresh is set.",
+        "dependencies": [
+          "state/AppState.js",
+          "utils/plugins/pluginLoader.js",
+          "utils/plugins/pluginBlocklist.js"
+        ]
+      },
+      {
+        "name": "useCanUseTool",
+        "type": "function",
+        "file": "hooks/useCanUseTool.tsx",
+        "signature": "function useCanUseTool(setToolUseConfirmQueue, setToolPermissionContext): CanUseToolFn",
+        "purpose": "React hook producing the CanUseToolFn used by the query loop: checks permissions, handles interactive confirmation queue, routes to coordinator/swarm-worker/interactive handlers, and records classifier approvals.",
+        "dependencies": [
+          "utils/permissions/permissions.js",
+          "hooks/toolPermission/PermissionContext.js",
+          "hooks/toolPermission/handlers/interactiveHandler.js"
+        ]
+      }
+    ],
+    "data_flows": [
+      {
+        "from": "settingsChangeDetector",
+        "to": "useSettingsChange",
+        "via": "Signal subscription (pub-sub)",
+        "data": "SettingSource identifier after external file change or MDM poll"
+      },
+      {
+        "from": "useSettingsChange",
+        "to": "AppStateProvider (applySettingsChange)",
+        "via": "onSettingsChange callback passed at mount",
+        "data": "Fresh SettingsJson merged from all sources"
+      },
+      {
+        "from": "applySettingsChange",
+        "to": "AppStateStore.setState",
+        "via": "Direct setState call",
+        "data": "Updated settings + reloaded permission rules + hooks snapshot"
+      },
+      {
+        "from": "AppStateStore.setState",
+        "to": "onChangeAppState",
+        "via": "Store onChange callback (synchronous)",
+        "data": "{ newState, oldState } diff for side-effect dispatch"
+      },
+      {
+        "from": "onChangeAppState",
+        "to": "settings files / CCR / SDK",
+        "via": "updateSettingsForSource, notifySessionMetadataChanged, saveGlobalConfig",
+        "data": "Persisted model selection, permission mode, UI preferences"
+      },
+      {
+        "from": "getAutoMemPath",
+        "to": "loadMemoryPrompt",
+        "via": "Direct call",
+        "data": "Resolved absolute memory directory path"
+      },
+      {
+        "from": "loadMemoryPrompt",
+        "to": "system prompt pipeline",
+        "via": "Return value injected by systemPromptSection('memory')",
+        "data": "Memory behavioral instructions + MEMORY.md index content"
+      },
+      {
+        "from": "scanMemoryFiles",
+        "to": "findRelevantMemories",
+        "via": "Await + filter",
+        "data": "MemoryHeader[] (filename, filePath, mtimeMs, description, type)"
+      },
+      {
+        "from": "findRelevantMemories",
+        "to": "Sonnet side-query",
+        "via": "sideQuery()",
+        "data": "User query + memory manifest; returns selected filenames"
+      },
+      {
+        "from": "hasPermissionsToUseTool",
+        "to": "useCanUseTool",
+        "via": "Await promise",
+        "data": "PermissionDecision (allow/deny/ask) with decisionReason"
+      },
+      {
+        "from": "useCanUseTool",
+        "to": "interactiveHandler / coordinatorHandler / swarmWorkerHandler",
+        "via": "Dispatch on toolUseContext topology",
+        "data": "PermissionDecision needing interactive resolution"
+      },
+      {
+        "from": "PermissionUpdate (user approval)",
+        "to": "settings files",
+        "via": "persistPermissionUpdates \u2192 updateSettingsForSource",
+        "data": "New allow/deny rules written to localSettings/projectSettings/userSettings"
+      },
+      {
+        "from": "loadAllPlugins",
+        "to": "AppState.plugins",
+        "via": "useManagePlugins \u2192 setAppState",
+        "data": "Enabled/disabled LoadedPlugin[] arrays, commands, errors"
+      },
+      {
+        "from": "performBackgroundPluginInstallations",
+        "to": "AppState.plugins.installationStatus",
+        "via": "setAppState progress callbacks",
+        "data": "Per-marketplace install status (pending/installing/installed/failed)"
+      },
+      {
+        "from": "recordTranscript",
+        "to": "JSONL file on disk",
+        "via": "appendEntry / buffered writer",
+        "data": "Serialized Message objects with parentUuid chain"
+      }
+    ]
+  },
+  "interpretation": {
+    "patterns": [
+      {
+        "name": "Centralized Observable Store with Side-Effect Bus",
+        "description": "AppState is held in a single custom pub-sub store (createStore) rather than Redux or Zustand. The store's onChange callback (onChangeAppState) acts as a single choke point that reacts to any state diff and dispatches persistence, remote sync, and cache-busting side effects. This prevents the 'scattered callsites' problem where eight different permission-mode mutation paths previously failed to notify CCR.",
+        "evidence": [
+          "state/store.ts:1-34",
+          "state/onChangeAppState.ts:43-171",
+          "state/AppState.tsx:84-91"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Layered Settings with MDM/Policy Override",
+        "description": "Settings are loaded from five sources in priority order (user < project < local < flag < policy). Policy (managed-settings.json + drop-in .d/ directory) is always included and always wins, enabling enterprise MDM control. A chokidar watcher plus a 30-minute MDM registry/plist poll keeps in-memory settings live without restart. The cache is reset atomically before notifying N listeners to avoid N-way disk re-reads.",
+        "evidence": [
+          "utils/settings/constants.ts:7-22",
+          "utils/settings/changeDetector.ts:84-146",
+          "utils/settings/changeDetector.ts:437-440",
+          "utils/settings/settingsCache.ts:55-59"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "File-Based Memory with Frontmatter Taxonomy and Sonnet Recall",
+        "description": "Persistent memory is stored as Markdown files under ~/.claude/projects/<git-root>/memory/ with YAML frontmatter declaring a closed four-type taxonomy (user/feedback/project/reference). At query time, a secondary Sonnet model acts as a relevance selector: it reads file descriptions from a manifest and picks up to five files to inject. This two-stage architecture keeps the main context window clean while still surfacing relevant past context.",
+        "evidence": [
+          "memdir/memdir.ts:34-315",
+          "memdir/memoryScan.ts:36-77",
+          "memdir/findRelevantMemories.ts:39-75"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Pluggable Permission Modes with Classifier Auto-Approval",
+        "description": "Permission evaluation is mode-parameterized: default requires interactive confirmation, bypassPermissions skips all checks, plan/acceptEdits auto-approve file edits, dontAsk converts ask\u2192deny, and the ant-only 'auto' mode routes ask decisions to an AI transcript classifier. A denial-tracking state (stored in AppState) falls back to interactive prompting after 3 consecutive or 20 total classifier denials, preventing infinite loops.",
+        "evidence": [
+          "utils/permissions/PermissionMode.ts:42-91",
+          "utils/permissions/permissions.ts:473-560",
+          "utils/permissions/denialTracking.ts:1-45"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Memoized Path Resolution with Security Validation",
+        "description": "getAutoMemPath is memoized keyed on projectRoot to avoid repeated disk reads in hot render paths, but must also perform security validation (validateMemoryPath) to reject path traversal, UNC paths, Windows drive roots, and null bytes before the path can become a filesystem allow-list root. Memory path overrides from committed project settings (projectSettings) are explicitly excluded to prevent malicious repos from redirecting memory writes to ~/.ssh.",
+        "evidence": [
+          "memdir/paths.ts:98-235",
+          "memdir/paths.ts:174-186"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Plugin Load with Cache-Only Startup and Background Reconcile",
+        "description": "The plugin loader has two memoized variants: loadAllPlugins (full, may clone git repos) and loadAllPluginsCacheOnly (reads from installed_plugins.json only). Startup uses cache-only to avoid blocking on git clones; a background reconciler (performBackgroundPluginInstallations) then installs/updates marketplaces and either auto-refreshes or sets needsRefresh for user-prompted reload.",
+        "evidence": [
+          "utils/plugins/pluginLoader.ts:3096-3146",
+          "services/plugins/PluginInstallationManager.ts:60-184"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "SessionHooksState Uses Map Mutation to Avoid O(N\u00b2) Under Parallel Agents",
+        "description": "Session hooks are stored in a Map (not a plain object) and mutators return the same Map reference after mutating it in place. Since store.ts uses Object.is diffing, same-reference mutations skip listener notification entirely. This is a deliberate performance optimization: parallel agent spawning with N schema-mode agents would otherwise fire N\u00b2 Object.is comparisons and listener callbacks.",
+        "evidence": [
+          "utils/hooks/sessionHooks.ts:42-62"
+        ],
+        "confidence": "high",
+        "surprising": true
+      }
+    ]
+  },
+  "cross_references": [
+    {
+      "symbol": "AppState",
+      "referenced_in": [
+        "hooks/useCanUseTool.tsx",
+        "hooks/useManagePlugins.ts",
+        "hooks/useSettings.ts",
+        "state/onChangeAppState.ts",
+        "utils/permissions/permissionSetup.ts",
+        "utils/settings/applySettingsChange.ts",
+        "services/plugins/PluginInstallationManager.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "getAutoMemPath",
+      "referenced_in": [
+        "memdir/memdir.ts",
+        "memdir/paths.ts",
+        "utils/permissions/filesystem.ts",
+        "utils/permissions/permissionSetup.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "settingsChangeDetector",
+      "referenced_in": [
+        "hooks/useSettingsChange.ts",
+        "utils/settings/applySettingsChange.ts",
+        "bootstrap/state.js"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "createStore",
+      "referenced_in": [
+        "state/AppState.tsx"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "hasPermissionsToUseTool",
+      "referenced_in": [
+        "hooks/useCanUseTool.tsx",
+        "utils/permissions/permissionSetup.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "loadAllPlugins",
+      "referenced_in": [
+        "hooks/useManagePlugins.ts",
+        "services/plugins/PluginInstallationManager.ts",
+        "utils/plugins/refresh.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "PermissionMode",
+      "referenced_in": [
+        "state/AppStateStore.ts",
+        "utils/permissions/permissions.ts",
+        "utils/permissions/permissionSetup.ts",
+        "state/onChangeAppState.ts",
+        "hooks/toolPermission/handlers/interactiveHandler.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "SessionHooksState",
+      "referenced_in": [
+        "state/AppStateStore.ts",
+        "utils/hooks/sessionHooks.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "getProjectDir",
+      "referenced_in": [
+        "utils/sessionStorage.ts",
+        "memdir/memdir.ts",
+        "utils/permissions/filesystem.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "DenialTrackingState",
+      "referenced_in": [
+        "state/AppStateStore.ts",
+        "utils/permissions/permissions.ts"
+      ],
+      "relationship": "imports"
+    }
+  ],
+  "surprises": [
+    "Memory path overrides from committed projectSettings are explicitly blocked to prevent a malicious repo's settings.json from silently redirecting memory writes to ~/.ssh or other sensitive directories.",
+    "The settings cache reset is centralized in the change detector's fanOut() rather than each subscriber, after profiling showed N subscribers \u00d7 resetSettingsCache() caused N full disk reloads per notification event.",
+    "SessionHooksState deliberately uses Map mutation (returning same reference) to skip store listener notification under parallel agent spawning, avoiding O(N\u00b2) cost when N schema-mode agents register hooks in the same tick.",
+    "The ant-only 'auto' permission mode routes ask decisions to an AI transcript classifier instead of the user, with a hard fallback after 3 consecutive or 20 total classifier denials to prevent infinite loops.",
+    "Memory recall is a two-model pipeline: the main model sees only a MEMORY.md index (\u2264200 lines / 25KB), while a Sonnet side-query reads full file descriptions and selects \u22645 relevant files to inject \u2014 keeping main context window clean.",
+    "The KAIROS assistant-mode memory system diverges completely from standard memory: it uses append-only date-named log files (logs/YYYY/MM/YYYY-MM-DD.md) instead of maintaining a live MEMORY.md index, with a separate nightly /dream distillation process.",
+    "onChangeAppState wires a single diff-listener to the store's onChange callback rather than having 8+ scattered mutation sites each responsible for notifying CCR, fixing a bug where Shift+Tab cycling and plan-mode exit left the web UI's permission_mode stale.",
+    "Plugin startup uses a cache-only load path (loadAllPluginsCacheOnly) to avoid blocking on git clones, while a background reconciler runs separately; the two memoize caches are intentionally separate so a cache-only result never satisfies a caller needing fresh source.",
+    "The ManagedSettings drop-in directory (managed-settings.d/*.json) follows the systemd/sudoers drop-in convention: alphabetically sorted fragments are merged atop managed-settings.json, letting separate teams ship independent policy fragments without coordinating edits.",
+    "AppState includes a full REPL tool VM context (vm.Context + registered tools + console capture) stored on the state object, persisting the JavaScript execution environment across REPL calls within a session."
+  ]
+}

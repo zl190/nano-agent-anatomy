@@ -1,0 +1,18 @@
+Done. Here's the summary:
+
+**Unblinding:** A = v1 (free-form), B = v2 (JSON schema + persona + gate)
+
+**Result: v1 wins 6-1 on blind evaluation** -- the opposite of the hypothesis.
+
+**What v2 improved:** Evidence quality (+1.33), extraction completeness (+0.33), machine readability (6/6 JSON parseable), 2.2x more named symbols, 2.3x more file:line citations.
+
+**What v2 made worse:** Pattern depth (-1.00), actionability (-1.17). JSON schema constrained output toward catalog descriptions, suppressing the narrative production insights that make source reading valuable.
+
+**Core finding:** Structure aids verification; freedom aids insight. These are different goals that v2 conflated into one format.
+
+**Recommendation for v3:** Separate extraction (JSON schema, cheap model) from interpretation (free-form Markdown, premium model). Gate the extraction; free the narrative.
+
+Files written:
+- `experiment/report/experiment-report.md` -- full 8-section report
+- `experiment/report/DONE` -- completion marker
+- `review-source-reading-agents.md` section 4 -- updated with actual data

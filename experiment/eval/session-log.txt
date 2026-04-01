@@ -1,0 +1,18 @@
+Evaluation complete. Results written to `experiment/eval/blind-eval-results.json` and `experiment/eval/DONE`.
+
+**Summary:**
+
+| Dimension | A wins | B wins | Tie |
+|-----------|--------|--------|-----|
+| Reader 1 (Core Runtime) | | x | |
+| Reader 2 (Tools/Shell) | x | | |
+| Reader 3 (AI/MCP) | x | | |
+| Reader 4 (UI/Terminal) | x | | |
+| Reader 5 (State/Persistence) | x | | |
+| Reader 6 (Commands/Skills) | x | | |
+| Synthesis | x | | |
+| **Overall** | **A** | | |
+
+**Key finding:** A delivers deeper production insights (sed interception, memory A/B tests, 34-line store, security/execution ratio 4:1). B has superior structure: 202 symbols (vs 91), 107 evidence citations with file:line refs (vs 47), valid JSON parsing on all 6 readers, and confidence tags on every pattern claim.
+
+The tradeoff is **depth vs structure**. A answers "what would I learn that I couldn't learn any other way?" B answers "what exists where and how confident should I be?" For source reading as a learning exercise, A wins. For building automated tooling, B wins.

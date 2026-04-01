@@ -1,0 +1,169 @@
+{
+  "evaluator_note": "Independent evaluation of two source-reading outputs (A=markdown, B=JSON) covering a 513K-line TypeScript codebase. Evaluated on rubric dimensions (1-5 scale). A outputs are prose-oriented with narrative flow and practical mapping sections. B outputs are structured JSON with explicit symbol lists, data flows, cross-references, and confidence tags. Both read the same codebase; both produced 6 reader outputs + 1 synthesis.",
+
+  "per_reader_scores": [
+    {
+      "reader_id": 1,
+      "topic": "Core Runtime",
+      "A": {
+        "extraction_completeness": 4,
+        "pattern_depth": 5,
+        "evidence_quality": 3,
+        "cross_reference_quality": 4,
+        "actionability": 5
+      },
+      "B": {
+        "extraction_completeness": 5,
+        "pattern_depth": 4,
+        "evidence_quality": 5,
+        "cross_reference_quality": 5,
+        "actionability": 4
+      },
+      "preference": "B",
+      "rationale": "B extracts 29 symbols with full signatures, dependencies, and 15 explicit data flow edges — verifiable and navigable. A provides deeper production insights (e.g., scroll drain detection, one-latch pattern, transcript-before-API) but lacks file:line evidence. B's cross-references are explicit typed edges. A wins on pattern depth (non-obvious insights that change how you build), B wins on completeness and evidence quality."
+    },
+    {
+      "reader_id": 2,
+      "topic": "Tools - Shell & File",
+      "A": {
+        "extraction_completeness": 5,
+        "pattern_depth": 5,
+        "evidence_quality": 4,
+        "cross_reference_quality": 4,
+        "actionability": 5
+      },
+      "B": {
+        "extraction_completeness": 5,
+        "pattern_depth": 4,
+        "evidence_quality": 5,
+        "cross_reference_quality": 4,
+        "actionability": 4
+      },
+      "preference": "A",
+      "rationale": "A delivers exceptional production insights: sed interception with hidden schema field, POSIX -- delimiter awareness, fixed-point sandbox stripping, pipeline-level read-only classification, cd+git cross-segment detection. The 'Patterns we can adopt' sections are immediately actionable. B captures more symbols (37 vs A's effective ~30) and has better evidence (file:line refs) but the insights are less surprising — more catalog-like. A's narrative about security being 4:1 to execution code is a revelation."
+    },
+    {
+      "reader_id": 3,
+      "topic": "AI & MCP Integration",
+      "A": {
+        "extraction_completeness": 4,
+        "pattern_depth": 5,
+        "evidence_quality": 3,
+        "cross_reference_quality": 5,
+        "actionability": 5
+      },
+      "B": {
+        "extraction_completeness": 4,
+        "pattern_depth": 4,
+        "evidence_quality": 4,
+        "cross_reference_quality": 4,
+        "actionability": 3
+      },
+      "preference": "A",
+      "rationale": "A covers the full AI+MCP layer comprehensively: agent spawn hierarchy diagram, 5-layer permission model, prompt cache budget allocation, 'what tutorials don't teach' section with 7 deep insights. B covers fewer files (13 symbols vs A's broader coverage) and misses the skill system and detailed MCP connection lifecycle. A's insight that 'skills are agents in disguise' and the fork cache optimization explanation are non-obvious and actionable. B's evidence quality is better with file:line refs."
+    },
+    {
+      "reader_id": 4,
+      "topic": "UI & Terminal",
+      "A": {
+        "extraction_completeness": 5,
+        "pattern_depth": 5,
+        "evidence_quality": 3,
+        "cross_reference_quality": 4,
+        "actionability": 5
+      },
+      "B": {
+        "extraction_completeness": 5,
+        "pattern_depth": 4,
+        "evidence_quality": 4,
+        "cross_reference_quality": 4,
+        "actionability": 4
+      },
+      "preference": "A",
+      "rationale": "A is outstanding here — it reads the terminal renderer as a 'game engine in disguise' and explains double buffering, bit-packed style pools, hardware scroll via DECSTBM, dirty-flag cascading, adaptive scroll drain, and Yoga WASM node pooling in a way that would let a senior engineer reimplement the key ideas. The 'Non-Obvious Implementation Details' section (IME cursor, selection overlay ordering, focus stack dedup, hyperlink padding) is exactly what makes a source reading valuable. B has more symbols and better evidence but reads more like an API reference — useful for navigation but less for understanding."
+    },
+    {
+      "reader_id": 5,
+      "topic": "State & Persistence",
+      "A": {
+        "extraction_completeness": 5,
+        "pattern_depth": 5,
+        "evidence_quality": 4,
+        "cross_reference_quality": 5,
+        "actionability": 5
+      },
+      "B": {
+        "extraction_completeness": 5,
+        "pattern_depth": 4,
+        "evidence_quality": 5,
+        "cross_reference_quality": 4,
+        "actionability": 4
+      },
+      "preference": "A",
+      "rationale": "A delivers the deepest insights in the entire evaluation: the 34-line store revelation, the onChangeAppState diff-watcher pattern replacing 8 scattered sites, the memory A/B test results (header wording changing 0/3 to 3/3), the two-pass symlink validation with PSR references, the 'DIR_EXISTS_GUIDANCE' prompt trick. A also has the best cross-cutting patterns section of any reader, connecting state, persistence, memory, and permissions. B is more thorough on symbol extraction (46 symbols with full signatures) and better on evidence but the insights are shallower."
+    },
+    {
+      "reader_id": 6,
+      "topic": "Commands & Skills",
+      "A": {
+        "extraction_completeness": 4,
+        "pattern_depth": 5,
+        "evidence_quality": 3,
+        "cross_reference_quality": 4,
+        "actionability": 5
+      },
+      "B": {
+        "extraction_completeness": 5,
+        "pattern_depth": 4,
+        "evidence_quality": 5,
+        "cross_reference_quality": 5,
+        "actionability": 4
+      },
+      "preference": "A",
+      "rationale": "A analyzes individual bundled skills (/batch, /simplify, /loop, /skillify, /remember, /stuck) with production insights from each — the /batch machine-readable output contract, /simplify's 3-agent parallel review, /update-config's 6-step hook verification. B captures the command system architecture more completely (35 symbols, 14 data flows, 10 cross-references) but treats skills as structural components rather than studying what they do. A's 'What Tutorials Don't Teach' section with 7 items is exactly the kind of output that justifies reading source code."
+    }
+  ],
+
+  "synthesis_scores": {
+    "A": {
+      "extraction_completeness": 5,
+      "pattern_depth": 5,
+      "evidence_quality": 4,
+      "cross_reference_quality": 5,
+      "actionability": 5
+    },
+    "B": {
+      "extraction_completeness": 4,
+      "pattern_depth": 4,
+      "evidence_quality": 3,
+      "cross_reference_quality": 4,
+      "actionability": 4
+    },
+    "preference": "A",
+    "rationale": "A's synthesis is substantially stronger. It identifies 10 cross-cutting patterns with reader-count evidence (pattern density map), provides a 3-section architecture summary (runtime core, state/reactivity, tool system, agent hierarchy, persistence/memory), and delivers 10 'Most Surprising Findings' that are genuinely non-obvious (security/execution ratio 4:1, sed interception, memory A/B tests, 34-line store, useLayoutEffect timing). A also includes a 'What Tutorials Will Never Teach' section with 10 items. B identifies 11 cross-cutting patterns (more than A) and provides a concise architecture summary, but the pattern descriptions are shorter, the surprises are listed without the depth of explanation that makes A's surprises memorable, and it lacks the 'pattern density map' cross-referencing. B includes useful metrics (token costs, wall clock) that A omits."
+  },
+
+  "automated_metrics": {
+    "A": {
+      "json_parseable_readers": 0,
+      "total_symbols": 91,
+      "total_patterns": 128,
+      "total_evidence_citations": 47,
+      "total_surprises": 4,
+      "has_confidence_tags": false,
+      "notes": "A uses markdown format (not JSON). Symbol count is approximate — A embeds symbols in prose rather than structured lists. Pattern count is high because A identifies patterns inline throughout the text rather than in discrete sections. Surprise count is low because A embeds surprising findings throughout 'Production insight' sections rather than in labeled 'surprise' sections (the actual count of non-obvious insights across all readers is much higher). Evidence citations use file names and line counts but rarely file:line notation."
+    },
+    "B": {
+      "json_parseable_readers": 6,
+      "total_symbols": 202,
+      "total_patterns": 45,
+      "total_evidence_citations": 107,
+      "total_surprises": 58,
+      "has_confidence_tags": true,
+      "notes": "B uses structured JSON with explicit symbol arrays, pattern objects with evidence arrays and confidence tags, and labeled surprise lists. Evidence citations use file:line format (e.g., 'commands.ts:449-468'). All 6 reader files parse as valid JSON."
+    }
+  },
+
+  "overall_preference": "A",
+  "overall_rationale": "A consistently delivers deeper, more surprising production insights that would change how a senior engineer thinks about building agent systems. The 'Production insight' annotations throughout A are the standout feature: they name specific non-obvious behaviors (sed interception, prompt cache obsession, memory A/B testing, 34-line store philosophy, useLayoutEffect timing bug, security/execution ratio) that no amount of documentation reading would reveal. A's synthesis is particularly strong — the 'Most Surprising Findings' and 'What Tutorials Will Never Teach' sections are the kind of output that justifies spending time reading source code.\n\nB is structurally superior: machine-parseable JSON, 2.2x more named symbols (202 vs 91), 2.3x more evidence citations with file:line references (107 vs 47), confidence tags on all pattern claims, and explicit data flow edges. B would be better for building automated tooling on top of the reading (e.g., a codebase navigator, dependency graph, or verification pipeline).\n\nThe tradeoff is depth vs structure. A answers 'what would I learn from reading this code that I couldn't learn any other way?' B answers 'what symbols exist where, how do they connect, and how confident should I be?' For the stated purpose (understanding a codebase deeply enough to navigate it and learn from its patterns), A's narrative depth wins — but only because B's structured format makes it look like an API catalog rather than a study guide. An ideal output would combine B's structured extraction with A's pattern depth and actionable insights."
+}

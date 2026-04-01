@@ -1,0 +1,80 @@
+{
+  "reader_id": 3,
+  "subsystem": "AI & MCP Integration",
+  "metrics": {
+    "tokens_consumed": 118999,
+    "tool_uses": 48,
+    "duration_ms": 267188,
+    "files_assigned_lines": 75000,
+    "files_actually_read": 22,
+    "lines_actually_read": 4850,
+    "deep_read_ratio": 0.065,
+    "gate_result": "PASS",
+    "schema_compliance": {
+      "symbols": 31,
+      "data_flows": 15,
+      "patterns": 8,
+      "cross_references": 11,
+      "surprises": 9
+    }
+  },
+  "extraction": {
+    "files_read": 22,
+    "total_lines": 4850,
+    "symbols": [
+      {"name": "getAnthropicClient", "type": "function", "file": "services/api/client.ts", "signature": "export async function getAnthropicClient({ apiKey, maxRetries, model, fetchOverride, source }): Promise<Anthropic>", "purpose": "Factory creating correct Anthropic SDK client (direct/Bedrock/Foundry/Vertex) based on env vars", "dependencies": ["utils/auth.js", "utils/http.js", "utils/model/model.js", "utils/model/providers.js"]},
+      {"name": "queryModel", "type": "function", "file": "services/api/claude.ts", "signature": "async function* queryModel(messages, systemPrompt, thinkingConfig, tools, signal, options): AsyncGenerator<StreamEvent|AssistantMessage>", "purpose": "Core streaming request loop: assembles headers, tool schemas, cache breakpoints, dispatches anthropic.beta.messages.create with stream:true", "dependencies": ["services/api/client.ts", "services/api/withRetry.ts"]},
+      {"name": "queryModelWithStreaming", "type": "function", "file": "services/api/claude.ts", "signature": "export async function* queryModelWithStreaming({...}): AsyncGenerator<StreamEvent|AssistantMessage>", "purpose": "Public streaming wrapper around queryModel, wired through withStreamingVCR", "dependencies": ["services/api/claude.ts"]},
+      {"name": "withRetry", "type": "function", "file": "services/api/withRetry.ts", "signature": "export async function* withRetry<T>(getClient, operation, options): AsyncGenerator<SystemAPIErrorMessage, T>", "purpose": "Generic retry generator: exponential backoff, jitter, OAuth refresh, 529-fallback, persistent unattended retry", "dependencies": ["utils/auth.js", "utils/fastMode.js"]},
+      {"name": "connectToServer", "type": "function", "file": "services/mcp/client.ts", "signature": "export const connectToServer = memoize(async (name, serverRef, serverStats?)): Promise<MCPServerConnection>", "purpose": "Memoized factory connecting MCP server over appropriate transport (stdio/SSE/HTTP/WS/in-process)", "dependencies": ["services/mcp/auth.ts", "services/mcp/types.ts"]},
+      {"name": "fetchToolsForClient", "type": "function", "file": "services/mcp/client.ts", "signature": "export const fetchToolsForClient = memoizeWithLRU(async (client)): Promise<Tool[]>", "purpose": "LRU-memoized tools/list call, wraps results in MCPTool template with overridden methods", "dependencies": ["tools/MCPTool/MCPTool.ts"]},
+      {"name": "ClaudeAuthProvider", "type": "class", "file": "services/mcp/auth.ts", "signature": "class ClaudeAuthProvider implements OAuthClientProvider", "purpose": "OAuth client for MCP SSE/HTTP: keychain tokens, PKCE flows, refresh, XAA token exchange", "dependencies": ["services/mcp/oauthPort.ts", "utils/secureStorage/index.js"]},
+      {"name": "AgentTool", "type": "const", "file": "tools/AgentTool/AgentTool.tsx", "signature": "export const AgentTool = buildTool({...})", "purpose": "Spawns subagents: sync/async/worktree/remote/teammate based on input params and feature gates", "dependencies": ["tools/AgentTool/runAgent.ts", "tasks/LocalAgentTask/"]},
+      {"name": "runAgent", "type": "function", "file": "tools/AgentTool/runAgent.ts", "signature": "export async function* runAgent({agentDefinition, promptMessages, ...}): AsyncGenerator<Message>", "purpose": "Core subagent execution: init MCP servers, build isolated context, call query(), record transcript", "dependencies": ["query.js", "services/mcp/client.ts"]},
+      {"name": "MCPTool", "type": "const", "file": "tools/MCPTool/MCPTool.ts", "signature": "export const MCPTool = buildTool({isMcp:true, name:'mcp'})", "purpose": "Template tool for all MCP-backed tools; name/description/call overridden per-server", "dependencies": ["Tool.js"]},
+      {"name": "InProcessTransport", "type": "class", "file": "services/mcp/InProcessTransport.ts", "signature": "class InProcessTransport implements Transport", "purpose": "Linked transport pair for in-process MCP (Chrome/ComputerUse), avoids 325MB subprocess overhead", "dependencies": []},
+      {"name": "WebSearchTool", "type": "const", "file": "tools/WebSearchTool/WebSearchTool.ts", "signature": "export const WebSearchTool = buildTool({...})", "purpose": "Submits search via queryModelWithStreaming with BetaWebSearchTool20250305 server tool", "dependencies": ["services/api/claude.ts"]},
+      {"name": "AgentDefinition", "type": "type", "file": "tools/AgentTool/loadAgentsDir.ts", "signature": "type AgentDefinition = BuiltInAgentDefinition | UserAgentDefinition", "purpose": "Named agent with system prompt, tools, MCP specs, model override, source provenance", "dependencies": []}
+    ],
+    "data_flows": [
+      {"from": "AgentTool.call()", "to": "runAgent()", "via": "direct call", "data": "AgentDefinition + ToolUseContext"},
+      {"from": "runAgent()", "to": "query()", "via": "async generator", "data": "Messages, SystemPrompt, Tools"},
+      {"from": "query()", "to": "queryModelWithStreaming()", "via": "async generator delegation", "data": "messages, system, tools, Options"},
+      {"from": "queryModelWithStreaming()", "to": "queryModel()", "via": "withStreamingVCR wrapper", "data": "same params, VCR intercepts"},
+      {"from": "queryModel()", "to": "withRetry()", "via": "async generator", "data": "getClient lambda, operation lambda"},
+      {"from": "withRetry()", "to": "anthropic.beta.messages.create(stream:true)", "via": "operation() lambda", "data": "BetaMessageStreamParams"},
+      {"from": "connectToServer()", "to": "MCP server", "via": "stdio/SSE/HTTP/WS/InProcess transport", "data": "JSON-RPC 2.0"},
+      {"from": "WebSearchTool.call()", "to": "queryModelWithStreaming()", "via": "recursive API call with BetaWebSearchTool", "data": "search query"}
+    ]
+  },
+  "interpretation": {
+    "patterns": [
+      {"name": "Multi-Provider API Client Factory", "description": "Single factory dynamically imports 4 SDK clients (Anthropic/Bedrock/Vertex/Foundry), all cast to type Anthropic. Callers unaware of provider.", "evidence": ["services/api/client.ts:88-315"], "confidence": "high", "surprising": false},
+      {"name": "Streaming-First with Non-Streaming Fallback", "description": "Primary path always stream:true. 529 mid-stream triggers executeNonStreamingRequest fallback. Idle watchdog (90s) aborts hung streams.", "evidence": ["services/api/claude.ts:1778-1857"], "confidence": "high", "surprising": false},
+      {"name": "Memoized MCP Connection with Cache-Invalidation Reconnect", "description": "connectToServer() memoized. client.onclose deletes cache entries → next call transparently reconnects. Reconnect is a side effect of cache invalidation.", "evidence": ["services/mcp/client.ts:595-596", "services/mcp/client.ts:1383-1396"], "confidence": "high", "surprising": true},
+      {"name": "In-Process MCP for Lightweight Servers", "description": "Chrome/ComputerUse run in-process via InProcessTransport (queueMicrotask). Saves ~325MB subprocess overhead.", "evidence": ["services/mcp/client.ts:906-944"], "confidence": "high", "surprising": true},
+      {"name": "Session-Stable Beta Header Latching", "description": "Beta headers latched once activated (fast-mode, AFK, cache-editing). Prevents mid-session cache bust (~50-70K tokens per flip). Cleared on /clear and /compact.", "evidence": ["services/api/claude.ts:1405-1442"], "confidence": "high", "surprising": true},
+      {"name": "WebSearch as Recursive API Call", "description": "WebSearchTool calls queryModelWithStreaming with server-side BetaWebSearchTool20250305. Search is delegated to Anthropic API, not external.", "evidence": ["tools/WebSearchTool/WebSearchTool.ts:1-23"], "confidence": "high", "surprising": true},
+      {"name": "Persistent Unattended Retry with Heartbeat", "description": "CLAUDE_CODE_UNATTENDED_RETRY: loops indefinitely on 429/529, yields SystemAPIErrorMessages every 30s as heartbeat to prevent host kill.", "evidence": ["services/api/withRetry.ts:91-103"], "confidence": "high", "surprising": true},
+      {"name": "FORK_SUBAGENT for Cache-Hit Inheritance", "description": "Child agent inherits parent's rendered system prompt bytes (not re-computed) for byte-identical API prefix → prompt cache hit.", "evidence": ["tools/AgentTool/forkSubagent.ts"], "confidence": "high", "surprising": true}
+    ]
+  },
+  "cross_references": [
+    {"symbol": "queryModelWithStreaming", "referenced_in": ["tools/WebSearchTool/", "query.ts"], "relationship": "calls"},
+    {"symbol": "getAnthropicClient", "referenced_in": ["services/api/claude.ts", "services/api/withRetry.ts"], "relationship": "calls"},
+    {"symbol": "connectToServer", "referenced_in": ["tools/AgentTool/runAgent.ts"], "relationship": "calls"},
+    {"symbol": "AgentDefinition", "referenced_in": ["services/api/claude.ts", "tools/AgentTool/AgentTool.tsx", "tools/AgentTool/runAgent.ts"], "relationship": "imports"},
+    {"symbol": "runAgent", "referenced_in": ["tools/AgentTool/AgentTool.tsx"], "relationship": "calls"}
+  ],
+  "surprises": [
+    "WebSearchTool does not call external search API — recursive queryModelWithStreaming() with server-side BetaWebSearchTool",
+    "Chrome/ComputerUse MCP in-process via InProcessTransport — saves 325MB subprocess overhead",
+    "MCP reconnect is cache invalidation side effect, not explicit retry",
+    "Beta headers latched session-stable to prevent 50-70K token cache bust",
+    "Persistent retry yields heartbeat SystemAPIErrorMessages every 30s",
+    "AgentTool supports isolation:remote — teleports to CCR cloud container",
+    "Streaming idle watchdog uses setTimeout (not AbortSignal.timeout) to avoid Bun memory leak",
+    "FORK_SUBAGENT inherits parent rendered system prompt for cache hit",
+    "MCP tools are clones from MCPTool template via object spread with closure overrides"
+  ]
+}

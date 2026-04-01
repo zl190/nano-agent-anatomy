@@ -1,0 +1,13 @@
+Blind evaluation completed: 2026-04-01
+
+Evaluator: Claude Opus 4.6 (independent, no knowledge of which methodology produced A vs B)
+Files evaluated: 14 (6 readers + 1 synthesis per set)
+Rubric dimensions: 5 (extraction_completeness, pattern_depth, evidence_quality, cross_reference_quality, actionability)
+
+Results: experiment/eval/blind-eval-results.json
+
+Summary:
+- Per-reader preference: A wins 5/6 readers, B wins 1/6
+- Synthesis preference: A
+- Overall preference: A (depth > structure for source reading)
+- Key tradeoff: A has deeper insights, B has better structure/evidence

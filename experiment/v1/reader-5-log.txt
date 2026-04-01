@@ -1,0 +1,15 @@
+Analysis complete. Saved to `experiment/v1/reader-5-state-persistence.md`.
+
+Here's the summary of what's architecturally important across the 5 assigned areas:
+
+---
+
+**`src/state/`** — The entire reactive state layer is 34 lines (`store.ts`). `AppState` is a God Object (~60 fields) with TypeScript-only `DeepImmutable` (function types excluded). The critical pattern: `onChangeAppState` is a diff-watcher that centralizes all side effects (disk persistence, CCR sync, cache invalidation) — before it existed, 8+ callsites forgot to notify external systems.
+
+**`src/memdir/`** — The memory system is ~1,700 lines and is essentially a prompt-engineering infrastructure. The memory instructions in `memoryTypes.ts` are eval-validated with A/B test results in comments. `findRelevantMemories` uses a 256-token Sonnet side-query to select the 5 most relevant files per turn. `memoryAge` intentionally uses "47 days ago" (not ISO timestamps) because models reason poorly about date arithmetic. `teamMemPaths.ts` has two-pass symlink validation (string-level + realpath) referencing internal security reviews.
+
+**`src/services/plugins/`** — Clean separation: `pluginOperations.ts` has pure business logic; `pluginCliCommands.ts` adds console output, analytics, and process.exit. `PluginInstallationManager` streams status into AppState via `onProgress` callbacks — background work decoupled from UI rendering.
+
+**`src/hooks/toolPermission/`** — Permission resolution races 4 concurrent sources (local UI dialog, CCR bridge/claude.ai, Telegram/iMessage channel, hooks+classifier). `createResolveOnce()` with `claim()` is the atomic guard — first caller wins, no locks needed. The swarm worker registers its callback before sending the request (prevents the race where the leader responds before registration).
+
+**`src/utils/`** — `agentContext.ts` uses `AsyncLocalStorage` (not AppState) for agent identity because concurrent backgrounded agents would overwrite each other's context. `TasksV2Store` is a singleton to prevent file watcher churn from Spinner's frequent mount/unmount cycles.

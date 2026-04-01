@@ -1,0 +1,19 @@
+Analysis complete. The report is saved to `experiment/v1/reader-3-ai-mcp-integration.md`.
+
+Key findings across the 8 file groups (~35K lines):
+
+**AgentTool** — The fork path does explicit prompt cache engineering: all fork siblings get identical placeholder tool_results so only the final directive differs. Tool filtering is bidirectional (parent can't let agents do certain things) and async agents get a smaller allowed-tool set. Agent definitions have their own MCP servers, hooks, memory, and permission modes in frontmatter.
+
+**MCPTool** — Just a template. Real tools are late-bound at connection time via `Object.assign`. UI collapsing is allowlist-based against 15+ known servers; unknown tools never collapse.
+
+**WebFetchTool** — Two-model pipeline: fetch → Haiku summarizes → result. Domain blocklist is server-side (Anthropic API), cross-domain redirects are surfaced to the model rather than auto-followed, preapproved host list bypasses the network roundtrip entirely.
+
+**WebSearchTool** — Wraps a server-side API capability, not client-side HTTP. `max_uses: 8` hardcoded. Result parsing requires a state machine for interleaved text/search/citation blocks.
+
+**LSPTool** — Three visibility states: fully present / deferred (pending init) / absent. Operation formatters are 592 lines because LSP protocol responses need translation to model-readable strings.
+
+**SkillTool** — Skills call `runAgent()` directly, making them structurally identical to subagents. MCP prompts can inject skills dynamically.
+
+**services/api/claude.ts** — 529 retry is query-source-aware (background tasks bail immediately). Prompt cache TTL is latched at session start. MCP tools downgrade cache scope from global to per-user. Non-streaming fallback pre-seeds the consecutive-529 counter.
+
+**services/mcp/client.ts** — Memoized connections with clear-on-close for auto-reconnect. Session expiry (HTTP 404 + JSON-RPC -32001) detected and handled. Per-request timeout via `setTimeout` not `AbortSignal.timeout` (Bun memory leak). In-process transport for Chrome/ComputerUse MCP avoids 325MB subprocess. Tool descriptions capped at 2048 chars.

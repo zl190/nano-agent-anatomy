@@ -1,0 +1,45 @@
+#!/bin/bash
+# QC Gate: blocks push if any code file lacks a corresponding learning note.
+# This is enforcement, not suggestion.
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+FAIL=0
+
+# Check 1: REMOVED — course notes moved to Gumroad (paid content).
+# Code is open source, analysis is the product.
+
+# Check 2: No commit message says "misc" or "various" or "fix"
+recent_msg=$(git log -1 --format=%s)
+if echo "$recent_msg" | grep -qiE '(misc|various|cleanup|minor fix)'; then
+    echo -e "${RED}BLOCKED:${NC} Commit message too vague: '$recent_msg'"
+    echo "Each commit must teach one thing. Use format: learn: <what you discovered>"
+    FAIL=1
+fi
+
+# Check 3: No .py file exceeds 150 lines
+for pyfile in *.py; do
+    [ ! -f "$pyfile" ] && continue
+    lines=$(wc -l < "$pyfile")
+    if [ "$lines" -gt 150 ]; then
+        echo -e "${RED}BLOCKED:${NC} $pyfile is $lines lines (max 150). Simplify."
+        FAIL=1
+    fi
+done
+
+# Check 4: main.py must import successfully
+if ! python3 -c "import ast; ast.parse(open('main.py').read())" 2>/dev/null; then
+    echo -e "${RED}BLOCKED:${NC} main.py has syntax errors"
+    FAIL=1
+fi
+
+if [ "$FAIL" -eq 1 ]; then
+    echo ""
+    echo -e "${RED}Push blocked by QC gate.${NC} Fix issues above."
+    exit 1
+fi
+
+echo -e "${GREEN}QC gate passed.${NC}"
+exit 0

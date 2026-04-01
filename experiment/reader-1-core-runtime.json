@@ -1,0 +1,653 @@
+{
+  "reader_id": 1,
+  "subsystem": "Core Runtime",
+  "extraction": {
+    "files_read": 18,
+    "total_lines": 2800,
+    "symbols": [
+      {
+        "name": "Tool",
+        "type": "type",
+        "file": "Tool.ts",
+        "signature": "export type Tool<Input extends AnyObject = AnyObject, Output = unknown, P extends ToolProgressData = ToolProgressData> = { name: string; call(...): Promise<ToolResult<Output>>; description(...): Promise<string>; checkPermissions(...): Promise<PermissionResult>; prompt(...): Promise<string>; ... }",
+        "purpose": "Core structural contract every tool must implement, including execution, permissions, rendering, and classification hooks.",
+        "dependencies": [
+          "types/message.js",
+          "types/permissions.js",
+          "types/tools.js",
+          "hooks/useCanUseTool.js",
+          "state/AppState.js",
+          "commands.js",
+          "services/mcp/types.js"
+        ]
+      },
+      {
+        "name": "ToolUseContext",
+        "type": "type",
+        "file": "Tool.ts",
+        "signature": "export type ToolUseContext = { options: { commands, tools, mcpClients, ... }; abortController: AbortController; getAppState(): AppState; setAppState(...): void; messages: Message[]; ... }",
+        "purpose": "Ambient context bag threaded through every tool call and query loop iteration, carrying tools, state accessors, abort signal, and session metadata.",
+        "dependencies": [
+          "state/AppState.js",
+          "commands.js",
+          "types/message.js",
+          "types/permissions.js",
+          "types/hooks.js",
+          "types/ids.js",
+          "utils/fileStateCache.js",
+          "utils/fileHistory.js"
+        ]
+      },
+      {
+        "name": "ToolPermissionContext",
+        "type": "type",
+        "file": "Tool.ts",
+        "signature": "export type ToolPermissionContext = DeepImmutable<{ mode: PermissionMode; alwaysAllowRules: ToolPermissionRulesBySource; alwaysDenyRules: ToolPermissionRulesBySource; ... }>",
+        "purpose": "Immutable snapshot of permission state consulted on every tool-use decision; threaded from AppState into ToolUseContext.",
+        "dependencies": [
+          "types/permissions.js"
+        ]
+      },
+      {
+        "name": "buildTool",
+        "type": "function",
+        "file": "Tool.ts",
+        "signature": "export function buildTool<D extends AnyToolDef>(def: D): BuiltTool<D>",
+        "purpose": "Factory that fills in safe fail-closed defaults (isEnabled=true, isConcurrencySafe=false, isReadOnly=false, checkPermissions=allow) so individual tool modules only declare what differs.",
+        "dependencies": []
+      },
+      {
+        "name": "Tools",
+        "type": "type",
+        "file": "Tool.ts",
+        "signature": "export type Tools = readonly Tool[]",
+        "purpose": "Nominal collection type for tool arrays, enabling precise tracking of where tool sets are assembled and passed.",
+        "dependencies": []
+      },
+      {
+        "name": "ToolResult",
+        "type": "type",
+        "file": "Tool.ts",
+        "signature": "export type ToolResult<T> = { data: T; newMessages?: ...; contextModifier?: (context: ToolUseContext) => ToolUseContext; mcpMeta?: ... }",
+        "purpose": "Return value from tool.call(), optionally injecting new messages or mutating the ToolUseContext for the next iteration.",
+        "dependencies": [
+          "types/message.js"
+        ]
+      },
+      {
+        "name": "QueryEngine",
+        "type": "class",
+        "file": "QueryEngine.ts",
+        "signature": "export class QueryEngine { constructor(config: QueryEngineConfig); async *submitMessage(prompt: string | ContentBlockParam[], options?): AsyncGenerator<SDKMessage, void, unknown> }",
+        "purpose": "Stateful per-conversation engine for the headless/SDK path; owns message history, file cache, and usage tracking across turns, delegating each turn to query().",
+        "dependencies": [
+          "query.js",
+          "Tool.js",
+          "commands.js",
+          "bootstrap/state.js",
+          "state/AppState.js",
+          "utils/processUserInput/processUserInput.js",
+          "utils/sessionStorage.js",
+          "services/api/claude.js"
+        ]
+      },
+      {
+        "name": "QueryEngineConfig",
+        "type": "type",
+        "file": "QueryEngine.ts",
+        "signature": "export type QueryEngineConfig = { cwd: string; tools: Tools; commands: Command[]; mcpClients: MCPServerConnection[]; canUseTool: CanUseToolFn; getAppState: () => AppState; setAppState: ...; ... }",
+        "purpose": "Configuration bundle passed once to QueryEngine constructor; carries tools, commands, state accessors, model overrides, and budget constraints.",
+        "dependencies": [
+          "Tool.js",
+          "commands.js",
+          "state/AppState.js",
+          "services/mcp/types.js",
+          "tools/AgentTool/loadAgentsDir.js"
+        ]
+      },
+      {
+        "name": "query",
+        "type": "function",
+        "file": "query.ts",
+        "signature": "export async function* query(params: QueryParams): AsyncGenerator<StreamEvent | RequestStartEvent | Message | TombstoneMessage | ToolUseSummaryMessage, Terminal>",
+        "purpose": "Top-level async generator driving the model\u2013tool loop: calls the API, executes tools, applies compaction/snip/collapse, and yields stream events until a terminal condition.",
+        "dependencies": [
+          "Tool.js",
+          "types/message.js",
+          "services/api/claude.js",
+          "services/compact/autoCompact.js",
+          "services/tools/toolOrchestration.js",
+          "utils/attachments.js",
+          "utils/messages.js",
+          "bootstrap/state.js"
+        ]
+      },
+      {
+        "name": "QueryParams",
+        "type": "type",
+        "file": "query.ts",
+        "signature": "export type QueryParams = { messages: Message[]; systemPrompt: SystemPrompt; userContext: {...}; systemContext: {...}; canUseTool: CanUseToolFn; toolUseContext: ToolUseContext; maxTurns?: number; taskBudget?: {...}; ... }",
+        "purpose": "Immutable input bundle for a single query() invocation; not mutated across loop iterations (mutable state is carried in queryLoop's local State).",
+        "dependencies": [
+          "Tool.js",
+          "types/message.js",
+          "hooks/useCanUseTool.js",
+          "constants/querySource.js"
+        ]
+      },
+      {
+        "name": "queryLoop",
+        "type": "function",
+        "file": "query.ts",
+        "signature": "async function* queryLoop(params: QueryParams, consumedCommandUuids: string[]): AsyncGenerator<..., Terminal>",
+        "purpose": "Private infinite loop handling one model call per iteration, including context preparation, streaming, tool dispatch, compaction, and transition decisions.",
+        "dependencies": [
+          "services/compact/autoCompact.js",
+          "services/compact/compact.js",
+          "services/tools/StreamingToolExecutor.js",
+          "services/tools/toolOrchestration.js",
+          "utils/tokens.js"
+        ]
+      },
+      {
+        "name": "State (query loop)",
+        "type": "type",
+        "file": "query.ts",
+        "signature": "type State = { messages: Message[]; toolUseContext: ToolUseContext; autoCompactTracking: ...; maxOutputTokensRecoveryCount: number; turnCount: number; transition: Continue | undefined; ... }",
+        "purpose": "Mutable cross-iteration snapshot destructured at the top of each loop body and reassigned atomically at continue sites.",
+        "dependencies": [
+          "types/message.js",
+          "Tool.js"
+        ]
+      },
+      {
+        "name": "Command",
+        "type": "type",
+        "file": "commands.ts",
+        "signature": "export type { Command, CommandBase, LocalCommandResult, PromptCommand, ... } from './types/command.js'",
+        "purpose": "Re-exported union type representing built-in slash commands; consumed by tools and QueryEngine options to handle /compact, /clear, /resume, etc.",
+        "dependencies": [
+          "types/command.js"
+        ]
+      },
+      {
+        "name": "getCommands / COMMANDS",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "const COMMANDS = memoize((): Command[] => [ addDir, advisor, agents, ..., vita, ... ])",
+        "purpose": "Memoized factory assembling the full slash-command registry; not executed until first call to avoid reading config at module init time.",
+        "dependencies": [
+          "commands/*",
+          "types/command.js"
+        ]
+      },
+      {
+        "name": "getSlashCommandToolSkills",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "export const getSlashCommandToolSkills = memoize((cwd: string) => ...)",
+        "purpose": "Loads user-defined skill files from the project's .claude/skills directory and wraps them as prompt-type Commands.",
+        "dependencies": [
+          "utils/skills.js"
+        ]
+      },
+      {
+        "name": "addToHistory / removeLastFromHistory",
+        "type": "function",
+        "file": "history.ts",
+        "signature": "export function addToHistory(command: HistoryEntry | string): void",
+        "purpose": "Manages the persistent per-session command history file used for up-arrow REPL navigation, with pasted-content deduplication via a hash store.",
+        "dependencies": [
+          "bootstrap/state.js",
+          "utils/config.js",
+          "utils/pasteStore.js"
+        ]
+      },
+      {
+        "name": "setup",
+        "type": "function",
+        "file": "setup.ts",
+        "signature": "export async function setup(cwd, permissionMode, allowDangerouslySkipPermissions, worktreeEnabled, worktreeName, tmuxEnabled, customSessionId?, worktreePRNumber?, messagingSocketPath?): Promise<void>",
+        "purpose": "Bootstrap sequence run once at session start: sets cwd, captures hooks config, initializes UDS messaging, creates worktree if requested, and wires terminal backup restoration.",
+        "dependencies": [
+          "bootstrap/state.js",
+          "commands.js",
+          "utils/hooks/hooksConfigSnapshot.js",
+          "utils/worktree.js",
+          "services/SessionMemory/sessionMemory.js"
+        ]
+      },
+      {
+        "name": "State (bootstrap)",
+        "type": "type",
+        "file": "bootstrap/state.ts",
+        "signature": "type State = { originalCwd: string; projectRoot: string; totalCostUSD: number; sessionId: SessionId; registeredHooks: ...; invokedSkills: Map<...>; isRemoteMode: boolean; ... }",
+        "purpose": "Process-global singleton holding immutable session identity (session ID, project root, start time) and mutable session-lifetime counters (cost, API duration, model usage).",
+        "dependencies": [
+          "types/ids.js",
+          "utils/model/model.js",
+          "entrypoints/agentSdkTypes.js"
+        ]
+      },
+      {
+        "name": "AppState",
+        "type": "type",
+        "file": "state/AppStateStore.ts",
+        "signature": "export type AppState = DeepImmutable<{ settings: SettingsJson; toolPermissionContext: ToolPermissionContext; tasks: { [taskId: string]: TaskState }; mcp: { clients, tools, commands, resources }; plugins: ...; agentDefinitions: ...; ... }>",
+        "purpose": "React/Zustand-style immutable UI+session state tree covering permission context, running tasks, MCP connections, plugin state, speculation state, and bridge connectivity.",
+        "dependencies": [
+          "Tool.js",
+          "tasks/types.js",
+          "utils/permissions/PermissionMode.js",
+          "services/mcp/types.js",
+          "types/plugin.js",
+          "state/store.js"
+        ]
+      },
+      {
+        "name": "AppStateStore",
+        "type": "type",
+        "file": "state/AppStateStore.ts",
+        "signature": "export type AppStateStore = Store<AppState>",
+        "purpose": "Type alias for the generic Store<AppState>; the single source of truth for reactive UI state, accessed via getState/setState/subscribe.",
+        "dependencies": [
+          "state/store.js"
+        ]
+      },
+      {
+        "name": "Store",
+        "type": "type",
+        "file": "state/store.ts",
+        "signature": "export type Store<T> = { getState: () => T; setState: (updater: (prev: T) => T) => void; subscribe: (listener: Listener) => () => void }",
+        "purpose": "Minimal reactive store primitive (identity-check, notify-all pattern) backing AppState; no external dependency on Redux/Zustand.",
+        "dependencies": []
+      },
+      {
+        "name": "AppStateProvider",
+        "type": "function",
+        "file": "state/AppState.tsx",
+        "signature": "export function AppStateProvider({ children, initialState, onChangeAppState }): React.ReactNode",
+        "purpose": "React context provider wrapping the Store; enforces single-provider invariant and wires optional onChange callback for SDK consumers.",
+        "dependencies": [
+          "state/store.js",
+          "state/AppStateStore.js"
+        ]
+      },
+      {
+        "name": "TaskState",
+        "type": "type",
+        "file": "tasks/types.ts",
+        "signature": "export type TaskState = LocalShellTaskState | LocalAgentTaskState | RemoteAgentTaskState | InProcessTeammateTaskState | LocalWorkflowTaskState | MonitorMcpTaskState | DreamTaskState",
+        "purpose": "Discriminated union of all background task variants stored in AppState.tasks; enables type-safe dispatch in task managers.",
+        "dependencies": [
+          "tasks/LocalAgentTask/LocalAgentTask.js",
+          "tasks/RemoteAgentTask/RemoteAgentTask.js",
+          "tasks/InProcessTeammateTask/types.js",
+          "tasks/LocalShellTask/guards.js"
+        ]
+      },
+      {
+        "name": "Task",
+        "type": "type",
+        "file": "Task.ts",
+        "signature": "export type Task = { name: string; type: TaskType; kill(taskId: string, setAppState: SetAppState): Promise<void> }",
+        "purpose": "Minimal polymorphic dispatch interface for task managers; only kill() is called polymorphically \u2014 spawn and render are type-specific.",
+        "dependencies": [
+          "state/AppState.js"
+        ]
+      },
+      {
+        "name": "LocalAgentTaskState",
+        "type": "type",
+        "file": "tasks/LocalAgentTask/LocalAgentTask.tsx",
+        "signature": "export type LocalAgentTaskState = TaskStateBase & { type: 'local_agent'; agentId: string; prompt: string; agentType: string; messages?: Message[]; isBackgrounded: boolean; retain: boolean; ... }",
+        "purpose": "State for in-process agent tasks (AgentTool subagents); tracks message stream, backgrounding, disk-load status, and eviction deadline.",
+        "dependencies": [
+          "Task.js",
+          "types/message.js",
+          "tools/AgentTool/loadAgentsDir.js"
+        ]
+      },
+      {
+        "name": "RemoteAgentTaskState",
+        "type": "type",
+        "file": "tasks/RemoteAgentTask/RemoteAgentTask.tsx",
+        "signature": "export type RemoteAgentTaskState = TaskStateBase & { type: 'remote_agent'; sessionId: string; log: SDKMessage[]; todoList: TodoList; ultraplanPhase?: ...; ... }",
+        "purpose": "State for remote CCR-hosted agent tasks (ultraplan, ultrareview, autofix-pr); polled via SSE and displayed in the tasks panel.",
+        "dependencies": [
+          "Task.js",
+          "entrypoints/agentSdkTypes.js",
+          "utils/teleport.js"
+        ]
+      },
+      {
+        "name": "RemoteSessionManager",
+        "type": "class",
+        "file": "remote/RemoteSessionManager.ts",
+        "signature": "export class RemoteSessionManager { constructor(config: RemoteSessionConfig, callbacks: RemoteSessionCallbacks); connect(): Promise<void>; disconnect(): void; sendMessage(content): Promise<void>; respondToPermission(...): Promise<void> }",
+        "purpose": "Manages the WebSocket subscription and HTTP POST channel for a single remote CCR session, including permission request/response flow.",
+        "dependencies": [
+          "remote/SessionsWebSocket.js",
+          "entrypoints/agentSdkTypes.js",
+          "entrypoints/sdk/controlTypes.js",
+          "utils/teleport/api.js"
+        ]
+      },
+      {
+        "name": "ReplBridgeHandle / BridgeCoreHandle",
+        "type": "type",
+        "file": "bridge/replBridge.ts",
+        "signature": "export type ReplBridgeHandle = { send(msg): void; stop(): void; ... }; export type BridgeCoreHandle = ReplBridgeHandle & { state: BridgeState; ... }",
+        "purpose": "Handle returned by the always-on bridge (replBridge), allowing the REPL to send messages to and disconnect from the claude.ai session gateway.",
+        "dependencies": [
+          "bridge/types.js",
+          "bridge/replBridgeTransport.js",
+          "bridge/bridgeMessaging.js"
+        ]
+      },
+      {
+        "name": "runBridgeHeadless",
+        "type": "function",
+        "file": "bridge/bridgeMain.ts",
+        "signature": "export async function runBridgeHeadless(opts: HeadlessBridgeOpts, signal: AbortSignal): Promise<void>",
+        "purpose": "Non-interactive daemon-worker entrypoint for the remote-control bridge; no TUI, auth via IPC, logs to stdout pipe, throws on fatal errors.",
+        "dependencies": [
+          "bootstrap/state.js",
+          "bridge/bridgeApi.js",
+          "bridge/sessionRunner.js",
+          "bridge/workSecret.js",
+          "utils/config.js"
+        ]
+      }
+    ],
+    "data_flows": [
+      {
+        "from": "setup",
+        "to": "bootstrap/state (State singleton)",
+        "via": "setOriginalCwd / setCwdState / switchSession",
+        "data": "cwd, sessionId, projectRoot \u2014 set once, never reassigned during session"
+      },
+      {
+        "from": "QueryEngine.submitMessage",
+        "to": "processUserInput",
+        "via": "async function call",
+        "data": "user prompt string or ContentBlockParam[], slash-command context, message array"
+      },
+      {
+        "from": "processUserInput",
+        "to": "QueryEngine.submitMessage",
+        "via": "return value",
+        "data": "{ messages, shouldQuery, allowedTools, model, resultText }"
+      },
+      {
+        "from": "QueryEngine.submitMessage",
+        "to": "query()",
+        "via": "async generator delegation (for await)",
+        "data": "QueryParams including normalized messages, systemPrompt, toolUseContext"
+      },
+      {
+        "from": "query / queryLoop",
+        "to": "deps.callModel (claude.ts API)",
+        "via": "async generator (for await over stream)",
+        "data": "messages[], systemPrompt, tools[], thinkingConfig, model, taskBudget"
+      },
+      {
+        "from": "deps.callModel",
+        "to": "queryLoop",
+        "via": "yielded StreamEvents",
+        "data": "assistant content blocks, tool_use blocks, usage deltas, stop_reason"
+      },
+      {
+        "from": "queryLoop",
+        "to": "runTools / StreamingToolExecutor",
+        "via": "function call on tool_use blocks",
+        "data": "ToolUseBlock[], canUseTool, ToolUseContext"
+      },
+      {
+        "from": "runTools",
+        "to": "Tool.call()",
+        "via": "dispatch by tool name via findToolByName",
+        "data": "parsed z.infer<Input>, ToolUseContext, canUseTool, onProgress callback"
+      },
+      {
+        "from": "Tool.call()",
+        "to": "queryLoop",
+        "via": "ToolResult.newMessages pushed as UserMessages",
+        "data": "ToolResultBlockParam content, optional contextModifier"
+      },
+      {
+        "from": "queryLoop",
+        "to": "QueryEngine.submitMessage",
+        "via": "yield (AsyncGenerator protocol)",
+        "data": "SDKMessage stream events, assistant/user Messages, compact boundaries, result"
+      },
+      {
+        "from": "AppState (store)",
+        "to": "ToolUseContext",
+        "via": "getAppState() accessor closure injected at construction",
+        "data": "toolPermissionContext, tasks, mcp.tools, fastMode, effortValue"
+      },
+      {
+        "from": "ToolUseContext.setAppState",
+        "to": "AppStateStore",
+        "via": "setState updater function",
+        "data": "task state updates, permission rule changes, file history snapshots"
+      },
+      {
+        "from": "bootstrap/state (State)",
+        "to": "QueryEngine / query",
+        "via": "getSessionId(), getMainLoopModel(), getTotalCost() direct calls",
+        "data": "sessionId, cost accumulators, model usage counters"
+      },
+      {
+        "from": "RemoteSessionManager",
+        "to": "AppState (via callbacks)",
+        "via": "onMessage / onPermissionRequest callbacks",
+        "data": "SDKMessage stream from CCR, SDKControlPermissionRequest"
+      },
+      {
+        "from": "ReplBridgeHandle",
+        "to": "claude.ai gateway",
+        "via": "HTTP long-poll or WebSocket transport",
+        "data": "outbound SDKMessages, inbound user prompts and permission responses"
+      }
+    ]
+  },
+  "interpretation": {
+    "patterns": [
+      {
+        "name": "Dual-State Plane: Process-Global vs React-Reactive",
+        "description": "Two distinct state layers coexist. bootstrap/state.ts holds a module-level singleton for session identity, cost counters, and telemetry \u2014 read by any module via direct getter calls. AppStateStore holds React-reactive UI state (tasks, permissions, MCP connections) via a minimal pub-sub Store<AppState>. The two planes are intentionally decoupled: bootstrap state never subscribes to React; React state never reads bootstrap state directly.",
+        "evidence": [
+          "bootstrap/state.ts:31 (// DO NOT ADD MORE STATE HERE)",
+          "state/store.ts:1-34",
+          "state/AppStateStore.ts:89-454"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Async Generator Streaming Pipeline",
+        "description": "The entire query lifecycle is expressed as a chain of async generators: queryLoop yields StreamEvents, query() wraps it with command lifecycle notifications, QueryEngine.submitMessage() wraps that with session transcript writes and SDK message shaping. Each layer can intercept, transform, or withhold events (e.g., withholding prompt-too-long errors until recovery is confirmed) without breaking the generator contract.",
+        "evidence": [
+          "query.ts:219-238 (query wrapper)",
+          "query.ts:241-250 (queryLoop signature)",
+          "QueryEngine.ts:209-212 (submitMessage signature)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "buildTool Factory with Fail-Closed Defaults",
+        "description": "All ~60 tools are defined via buildTool(), which applies fail-closed defaults: isConcurrencySafe=false, isReadOnly=false, checkPermissions=allow (defer to general permission system), toAutoClassifierInput='' (skip classifier). Individual tools override only what they need. This prevents new tools from accidentally bypassing permission checks or parallel execution guards.",
+        "evidence": [
+          "Tool.ts:756-792 (TOOL_DEFAULTS + buildTool)",
+          "Tool.ts:746-755 (comment on defaults)"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Feature-Gated Dead Code Elimination via bun:bundle",
+        "description": "Optional subsystems (COORDINATOR_MODE, HISTORY_SNIP, CONTEXT_COLLAPSE, REACTIVE_COMPACT, VOICE_MODE, BRIDGE_MODE, KAIROS, etc.) are loaded via conditional require() guarded by feature() from 'bun:bundle'. At build time, the bundler eliminates false branches and their string literals, producing a smaller external build without ifdef preprocessing. This pattern appears at least 15 times across query.ts and QueryEngine.ts alone.",
+        "evidence": [
+          "query.ts:15-21 (reactiveCompact / contextCollapse)",
+          "query.ts:114-121 (snipModule / taskSummaryModule)",
+          "QueryEngine.ts:110-128 (COORDINATOR_MODE, HISTORY_SNIP)"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "ToolUseContext as Ambient Dependency Injection",
+        "description": "Rather than passing individual dependencies (getAppState, abortController, setInProgressToolUseIDs, etc.) to each tool call, all ambient dependencies are bundled into a ToolUseContext object threaded from QueryEngine through every layer. Tools receive this context and call only what they need. The contextModifier field in ToolResult allows tools to mutate the context for subsequent iterations without breaking concurrency safety.",
+        "evidence": [
+          "Tool.ts:158-300 (ToolUseContext type)",
+          "Tool.ts:327-334 (ToolResult.contextModifier)",
+          "query.ts:546-548 (toolUseContext reassignment at continue site)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Task Union Pattern for Heterogeneous Concurrency",
+        "description": "Background concurrency is modelled as a discriminated union of TaskState variants (local_agent, remote_agent, in_process_teammate, local_bash, dream, etc.) stored in AppState.tasks. The polymorphic Task interface only exposes kill() \u2014 spawn and render are type-specific. This gives the UI a single subscription point while keeping task logic isolated in per-type modules.",
+        "evidence": [
+          "Task.ts:6-76",
+          "tasks/types.ts:12-30",
+          "state/AppStateStore.ts:159-163 (tasks field excluded from DeepImmutable)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Prompt Cache Preservation via Immutable Message Mutation Discipline",
+        "description": "The query loop is careful never to mutate API-bound messages in place. When backfillObservableInput needs to add derived fields for SDK observers, it clones the message and the affected block before yielding, leaving the original untouched. Comments explicitly cite prompt caching (byte mismatch) as the reason. Similarly, sticky-on latches in bootstrap/state.ts (afkModeHeaderLatched, fastModeHeaderLatched, cacheEditingHeaderLatched) prevent mid-session feature toggles from busting the server-side prompt cache.",
+        "evidence": [
+          "query.ts:742-787 (backfillObservableInput clone logic)",
+          "bootstrap/state.ts:227-237 (latched booleans)",
+          "bootstrap/state.ts:118 (lastAPIRequestMessages comment)"
+        ],
+        "confidence": "high",
+        "surprising": true
+      }
+    ]
+  },
+  "cross_references": [
+    {
+      "symbol": "ToolUseContext",
+      "referenced_in": [
+        "query.ts",
+        "QueryEngine.ts",
+        "tools/*",
+        "utils/processUserInput/processUserInput.ts",
+        "hooks/useCanUseTool.ts",
+        "utils/toolExecution.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "Tool",
+      "referenced_in": [
+        "tools.ts",
+        "tools/*",
+        "query.ts",
+        "QueryEngine.ts",
+        "state/AppStateStore.ts",
+        "utils/processUserInput/processUserInput.ts"
+      ],
+      "relationship": "implements"
+    },
+    {
+      "symbol": "AppState",
+      "referenced_in": [
+        "state/AppState.tsx",
+        "state/AppStateStore.ts",
+        "state/selectors.ts",
+        "Task.ts",
+        "tasks/*",
+        "Tool.ts",
+        "QueryEngine.ts",
+        "query.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "query",
+      "referenced_in": [
+        "QueryEngine.ts",
+        "entrypoints/print.ts",
+        "entrypoints/repl.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "buildTool",
+      "referenced_in": [
+        "tools/*"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "bootstrap/state (getSessionId, getProjectRoot, etc.)",
+      "referenced_in": [
+        "QueryEngine.ts",
+        "query.ts",
+        "history.ts",
+        "setup.ts",
+        "bridge/bridgeMain.ts",
+        "services/api/claude.ts",
+        "utils/sessionStorage.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "setup",
+      "referenced_in": [
+        "main.tsx",
+        "entrypoints/print.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "TaskState",
+      "referenced_in": [
+        "state/AppStateStore.ts",
+        "state/selectors.ts",
+        "tasks/LocalAgentTask/*",
+        "tasks/RemoteAgentTask/*",
+        "tools/AgentTool/*"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "RemoteSessionManager",
+      "referenced_in": [
+        "entrypoints/repl.ts",
+        "screens/RemoteSessionScreen.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "Command",
+      "referenced_in": [
+        "Tool.ts",
+        "QueryEngine.ts",
+        "query.ts",
+        "state/AppStateStore.ts",
+        "utils/processUserInput/processUserInput.ts"
+      ],
+      "relationship": "imports"
+    }
+  ],
+  "surprises": [
+    "buildTool's default checkPermissions returns { behavior: 'allow' } \u2014 permission enforcement is opt-in per tool, not opt-out; security relies on the general permission system in permissions.ts running before tool.checkPermissions",
+    "The query loop can withhold error messages from downstream consumers (prompt-too-long, max_output_tokens) to allow internal recovery loops to retry before SDK callers see any error \u2014 a silent retry abstraction spanning multiple generator layers",
+    "bootstrap/state.ts explicitly warns 'DO NOT ADD MORE STATE HERE \u2014 BE JUDICIOUS WITH GLOBAL STATE' and 'THINK THRICE BEFORE MODIFYING', suggesting historical over-growth of the module",
+    "AppState.tasks is explicitly excluded from DeepImmutable because TaskState variants contain function types (abortController, callbacks) \u2014 the tasks map is structurally mutable inside an otherwise immutable tree",
+    "Feature flags use 'bun:bundle' import (not a runtime flag system) so the bundler performs static dead-code elimination at build time, meaning feature() calls cannot be evaluated at runtime \u2014 they must appear in if/ternary positions only",
+    "ToolUseContext carries two separate setAppState paths: setAppState (no-op for async subagents to prevent state leakage) and setAppStateForTasks (always reaches root store for session-scoped infrastructure), a subtle dual-write design to handle nested agent isolation",
+    "The session prompt cache is protected by sticky boolean latches in bootstrap/state (e.g. afkModeHeaderLatched) that flip true on first activation and never reset \u2014 ensuring mid-session GrowthBook/settings toggles cannot change request headers and bust a multi-hundred-thousand-token cached prompt",
+    "Commands registry (COMMANDS in commands.ts) is memoized and intentionally not initialized at module load time to avoid reading config files during import \u2014 a common pattern to keep module evaluation side-effect-free"
+  ]
+}

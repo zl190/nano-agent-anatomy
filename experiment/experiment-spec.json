@@ -1,0 +1,133 @@
+{
+  "experiment": "SOP v1 vs v2 for Multi-Agent Source Code Reading",
+  "date": "2026-04-01",
+  "codebase": {
+    "name": "claude-code-source-code",
+    "path": "/Users/zl190/Developer/personal/cc-ts-source",
+    "language": "TypeScript",
+    "total_files": 1892,
+    "total_lines": 513000
+  },
+  "conditions": {
+    "v1": {
+      "description": "SOP v1: no JSON schema, no persona, no gate, free-form output",
+      "sop_reference": "~/.claude/memory/knowledge/source-reading-agent-sop.md",
+      "output_dir": "experiment/v1/",
+      "prompt_template": "experiment/prompts/step2-v1-baseline.md"
+    },
+    "v2": {
+      "description": "SOP v2: JSON schema, architecture persona, validation gate",
+      "sop_reference": "~/.claude/memory/knowledge/source-reading-agent-sop-v2.md",
+      "output_dir": "experiment/v2/",
+      "status": "COMPLETED",
+      "note": "v2 was already run. Results in experiment/v2/ and synthesis-v2-run1.md"
+    }
+  },
+  "controlled_variables": {
+    "model": "sonnet",
+    "file_assignments": [
+      {
+        "reader_id": 1,
+        "name": "Core Runtime",
+        "files": [
+          "src/Tool.ts", "src/QueryEngine.ts", "src/query.ts", "src/commands.ts",
+          "src/history.ts", "src/setup.ts", "src/bootstrap/state.ts",
+          "src/bridge/", "src/remote/", "src/tasks/", "src/state/"
+        ]
+      },
+      {
+        "reader_id": 2,
+        "name": "Tools - Shell & File",
+        "files": [
+          "src/tools/BashTool/", "src/tools/FileReadTool/", "src/tools/FileEditTool/",
+          "src/tools/FileWriteTool/", "src/tools/GlobTool/", "src/tools/GrepTool/",
+          "src/tools/PowerShellTool/"
+        ]
+      },
+      {
+        "reader_id": 3,
+        "name": "AI & MCP Integration",
+        "files": [
+          "src/tools/MCPTool/", "src/tools/WebFetchTool/", "src/tools/WebSearchTool/",
+          "src/tools/LSPTool/", "src/tools/AgentTool/", "src/tools/SkillTool/",
+          "src/services/api/", "src/services/mcp/"
+        ]
+      },
+      {
+        "reader_id": 4,
+        "name": "UI & Terminal",
+        "files": ["src/components/", "src/ink/", "src/cli/"]
+      },
+      {
+        "reader_id": 5,
+        "name": "State & Persistence",
+        "files": [
+          "src/utils/", "src/services/plugins/", "src/memdir/",
+          "src/state/", "src/hooks/"
+        ]
+      },
+      {
+        "reader_id": 6,
+        "name": "Commands & Skills",
+        "files": [
+          "src/commands/", "src/skills/", "src/plugins/",
+          "src/utils/bash/specs/"
+        ]
+      }
+    ],
+    "reading_goal": "Understand the core architecture of Claude Code — how all subsystems connect, what production patterns emerge across layers, and what's genuinely surprising."
+  },
+  "metrics": {
+    "automated": [
+      {"name": "json_parse_success", "description": "Can the output be parsed as valid JSON?", "type": "binary"},
+      {"name": "symbol_count", "description": "Number of symbols (classes/functions/types) extracted", "type": "count"},
+      {"name": "pattern_count", "description": "Number of architectural patterns identified", "type": "count"},
+      {"name": "evidence_citation_count", "description": "Number of file:line references in output", "type": "count"},
+      {"name": "has_confidence_tags", "description": "Are confidence levels assigned to claims?", "type": "binary"},
+      {"name": "surprise_count", "description": "Number of surprising findings noted", "type": "count"},
+      {"name": "tokens_consumed", "description": "Total tokens used by all readers", "type": "count"},
+      {"name": "wall_time_seconds", "description": "Max parallel reader duration", "type": "count"}
+    ],
+    "blind_eval": [
+      {"name": "extraction_completeness", "description": "How thoroughly were key symbols/interfaces extracted? (1-5)", "type": "likert"},
+      {"name": "pattern_depth", "description": "Are patterns non-obvious production insights or just surface descriptions? (1-5)", "type": "likert"},
+      {"name": "evidence_quality", "description": "Are claims backed by specific file:line references? (1-5)", "type": "likert"},
+      {"name": "cross_reference_quality", "description": "Are connections between subsystems identified? (1-5)", "type": "likert"},
+      {"name": "actionability", "description": "Could someone use this output to navigate the codebase? (1-5)", "type": "likert"},
+      {"name": "overall", "description": "Which output set would you prefer as a codebase guide? (A or B)", "type": "preference"}
+    ]
+  },
+  "steps": [
+    {
+      "step": 1,
+      "name": "v1_baseline",
+      "prompt_file": "experiment/prompts/step2-v1-baseline.md",
+      "output_dir": "experiment/v1/",
+      "isolation": "fresh claude -p session",
+      "depends_on": null
+    },
+    {
+      "step": 2,
+      "name": "anonymize",
+      "script": "Randomly assign v1/v2 to labels A/B, copy to experiment/blind/",
+      "isolation": "shell script (no LLM)",
+      "depends_on": "step1"
+    },
+    {
+      "step": 3,
+      "name": "blind_eval",
+      "prompt_file": "experiment/prompts/step3-blind-eval.md",
+      "output_dir": "experiment/eval/",
+      "isolation": "fresh claude -p session",
+      "depends_on": "step2"
+    },
+    {
+      "step": 4,
+      "name": "compile_report",
+      "prompt_file": "experiment/prompts/step4-compile-report.md",
+      "output_dir": "experiment/report/",
+      "isolation": "fresh claude -p session",
+      "depends_on": "step3"
+    }
+  ]
+}

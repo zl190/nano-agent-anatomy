@@ -1,0 +1,715 @@
+{
+  "reader_id": 2,
+  "subsystem": "Tools - Shell & File",
+  "extraction": {
+    "files_read": 32,
+    "total_lines": 25564,
+    "symbols": [
+      {
+        "name": "BashTool",
+        "type": "const",
+        "file": "tools/BashTool/BashTool.tsx",
+        "signature": "export const BashTool = buildTool({ name: BASH_TOOL_NAME, ... } satisfies ToolDef<InputSchema, Out, BashProgress>)",
+        "purpose": "Core shell execution tool that runs bash commands, handles foreground/background execution, sandbox enforcement, and output streaming via async generator.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts",
+          "tools/BashTool/bashSecurity.ts",
+          "tools/BashTool/shouldUseSandbox.ts",
+          "tools/BashTool/pathValidation.ts",
+          "tools/BashTool/readOnlyValidation.ts",
+          "tools/BashTool/sedEditParser.ts",
+          "tools/BashTool/commandSemantics.ts",
+          "tasks/LocalShellTask/LocalShellTask.ts",
+          "utils/Shell.ts",
+          "utils/sandbox/sandbox-adapter.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "BashToolInput",
+        "type": "type",
+        "file": "tools/BashTool/BashTool.tsx",
+        "signature": "export type BashToolInput = z.infer<ReturnType<typeof fullInputSchema>>",
+        "purpose": "Zod-validated input type for BashTool with command, timeout, description, run_in_background, dangerouslyDisableSandbox, and internal _simulatedSedEdit fields.",
+        "dependencies": [
+          "tools/BashTool/BashTool.tsx"
+        ]
+      },
+      {
+        "name": "runShellCommand",
+        "type": "function",
+        "file": "tools/BashTool/BashTool.tsx",
+        "signature": "async function* runShellCommand({ input, abortController, setAppState, setToolJSX, preventCwdChanges, isMainThread, toolUseId, agentId }): AsyncGenerator<progress, ExecResult, void>",
+        "purpose": "Async generator that drives shell command execution, yields progress updates, handles auto-backgrounding (timeout and assistant-mode), and returns the final ExecResult.",
+        "dependencies": [
+          "utils/Shell.ts",
+          "tasks/LocalShellTask/LocalShellTask.ts",
+          "tools/BashTool/shouldUseSandbox.ts"
+        ]
+      },
+      {
+        "name": "bashToolHasPermission",
+        "type": "function",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export async function bashToolHasPermission(input, context, getCommandSubcommandPrefixFn?): Promise<PermissionResult>",
+        "purpose": "Primary permission gate for BashTool: orchestrates tree-sitter AST parse, deny/ask/allow rule matching, security validators, path constraints, read-only checks, classifier, and mode validation into a single PermissionResult.",
+        "dependencies": [
+          "tools/BashTool/bashSecurity.ts",
+          "tools/BashTool/pathValidation.ts",
+          "tools/BashTool/readOnlyValidation.ts",
+          "tools/BashTool/modeValidation.ts",
+          "tools/BashTool/sedValidation.ts",
+          "utils/bash/ast.ts",
+          "utils/permissions/bashClassifier.ts",
+          "utils/permissions/permissions.ts",
+          "utils/sandbox/sandbox-adapter.ts"
+        ]
+      },
+      {
+        "name": "bashToolCheckPermission",
+        "type": "const",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export const bashToolCheckPermission = (input, toolPermissionContext, compoundCommandHasCd?, astCommand?): PermissionResult",
+        "purpose": "Per-subcommand permission check: exact match \u2192 prefix/wildcard deny/ask/allow rule matching \u2192 path constraints \u2192 security validators, returning deny/ask/allow/passthrough.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts",
+          "tools/BashTool/pathValidation.ts",
+          "tools/BashTool/bashSecurity.ts",
+          "utils/permissions/PermissionResult.ts"
+        ]
+      },
+      {
+        "name": "bashToolCheckExactMatchPermission",
+        "type": "const",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export const bashToolCheckExactMatchPermission = (input, toolPermissionContext): PermissionResult",
+        "purpose": "Fast-path exact-command rule lookup returning deny/ask/allow before prefix matching is attempted.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts"
+        ]
+      },
+      {
+        "name": "stripSafeWrappers",
+        "type": "function",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export function stripSafeWrappers(command: string): string",
+        "purpose": "Two-phase normalizer: first strips safe env vars (SAFE_ENV_VARS allowlist), then strips safe wrapper commands (timeout, time, nice, nohup) to expose the actual command for permission matching.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts"
+        ]
+      },
+      {
+        "name": "stripAllLeadingEnvVars",
+        "type": "function",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export function stripAllLeadingEnvVars(command: string, blocklist?: RegExp): string",
+        "purpose": "Strips ALL leading env var assignments for deny/ask rule matching so that `FOO=bar denied_cmd` cannot bypass a deny rule by prefixing with an unrecognized env var.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts"
+        ]
+      },
+      {
+        "name": "stripWrappersFromArgv",
+        "type": "function",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export function stripWrappersFromArgv(argv: string[]): string[]",
+        "purpose": "Argv-level counterpart to stripSafeWrappers; strips timeout/time/nice/nohup from AST-derived argv arrays for path validation.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts"
+        ]
+      },
+      {
+        "name": "bashCommandIsSafe_DEPRECATED",
+        "type": "function",
+        "file": "tools/BashTool/bashSecurity.ts",
+        "signature": "export function bashCommandIsSafe_DEPRECATED(command: string): PermissionResult",
+        "purpose": "Legacy synchronous regex-based security validator running 23 checks (command substitution, dangerous variables, IFS injection, unicode whitespace, Zsh dangerous commands, etc.) against a single command string.",
+        "dependencies": [
+          "tools/BashTool/bashSecurity.ts",
+          "utils/bash/shellQuote.ts",
+          "utils/bash/treeSitterAnalysis.ts",
+          "services/analytics/index.ts"
+        ]
+      },
+      {
+        "name": "bashCommandIsSafeAsync_DEPRECATED",
+        "type": "function",
+        "file": "tools/BashTool/bashSecurity.ts",
+        "signature": "export async function bashCommandIsSafeAsync_DEPRECATED(command: string): Promise<PermissionResult>",
+        "purpose": "Async wrapper around bashCommandIsSafe_DEPRECATED that resolves tree-sitter analysis before running the sync checks.",
+        "dependencies": [
+          "tools/BashTool/bashSecurity.ts"
+        ]
+      },
+      {
+        "name": "isSafeHeredoc",
+        "type": "function",
+        "file": "tools/BashTool/bashSecurity.ts",
+        "signature": "function isSafeHeredoc(command: string): boolean",
+        "purpose": "Validates that a heredoc-in-substitution pattern is provably safe (single-quoted delimiter, line-based matching mirroring bash behavior) to avoid false positives on legitimate git commit messages.",
+        "dependencies": [
+          "tools/BashTool/bashSecurity.ts"
+        ]
+      },
+      {
+        "name": "BASH_SECURITY_CHECK_IDS",
+        "type": "const",
+        "file": "tools/BashTool/bashSecurity.ts",
+        "signature": "const BASH_SECURITY_CHECK_IDS = { INCOMPLETE_COMMANDS: 1, ..., COMMENT_QUOTE_DESYNC: 22, QUOTED_NEWLINE: 23 } as const",
+        "purpose": "Numeric identifiers for 23 distinct bash security checks used in analytics events to avoid logging command strings.",
+        "dependencies": []
+      },
+      {
+        "name": "ZSH_DANGEROUS_COMMANDS",
+        "type": "const",
+        "file": "tools/BashTool/bashSecurity.ts",
+        "signature": "const ZSH_DANGEROUS_COMMANDS = new Set(['zmodload', 'emulate', 'sysopen', 'sysread', 'syswrite', 'sysseek', 'zpty', 'ztcp', 'zsocket', 'mapfile', 'zf_rm', ...])",
+        "purpose": "Blocklist of Zsh module commands that can bypass permission checks by loading dangerous modules (file I/O, pseudo-terminals, TCP exfiltration).",
+        "dependencies": []
+      },
+      {
+        "name": "checkPathConstraints",
+        "type": "function",
+        "file": "tools/BashTool/pathValidation.ts",
+        "signature": "function checkPathConstraints(command, args, cwd, toolPermissionContext, operationType): PermissionResult",
+        "purpose": "Validates file paths extracted from bash commands against project-directory constraints, blocking access outside allowed directories.",
+        "dependencies": [
+          "utils/permissions/pathValidation.ts",
+          "utils/permissions/filesystem.ts",
+          "tools/BashTool/bashPermissions.ts"
+        ]
+      },
+      {
+        "name": "checkReadOnlyConstraints",
+        "type": "function",
+        "file": "tools/BashTool/readOnlyValidation.ts",
+        "signature": "export function checkReadOnlyConstraints(input, compoundCommandHasCd?): PermissionResult",
+        "purpose": "Determines if a bash command is provably read-only by validating it against per-command safe-flag allowlists (git, docker, gh, rg, etc.) and returning allow/passthrough accordingly.",
+        "dependencies": [
+          "utils/shell/readOnlyCommandValidation.ts",
+          "tools/BashTool/pathValidation.ts",
+          "tools/BashTool/bashSecurity.ts",
+          "tools/BashTool/sedValidation.ts"
+        ]
+      },
+      {
+        "name": "checkPermissionMode",
+        "type": "function",
+        "file": "tools/BashTool/modeValidation.ts",
+        "signature": "function checkPermissionMode(commands, toolPermissionContext): PermissionResult",
+        "purpose": "Mode-aware permission override: in acceptEdits mode, auto-allows filesystem commands (mkdir, touch, rm, rmdir, mv, cp, sed).",
+        "dependencies": [
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "shouldUseSandbox",
+        "type": "function",
+        "file": "tools/BashTool/shouldUseSandbox.ts",
+        "signature": "export function shouldUseSandbox(input: SandboxInput): boolean",
+        "purpose": "Determines whether to execute a command inside the sandbox based on SandboxManager state, dangerouslyDisableSandbox flag, and excludedCommands settings.",
+        "dependencies": [
+          "tools/BashTool/bashPermissions.ts",
+          "utils/sandbox/sandbox-adapter.ts",
+          "utils/settings/settings.ts"
+        ]
+      },
+      {
+        "name": "parseSedEditCommand",
+        "type": "function",
+        "file": "tools/BashTool/sedEditParser.ts",
+        "signature": "export function parseSedEditCommand(command: string): SedEditInfo | null",
+        "purpose": "Parses a sed -i in-place substitution command into structured form (filePath, pattern, replacement, flags) enabling file-edit-style UI rendering and permission preview.",
+        "dependencies": [
+          "utils/bash/shellQuote.ts"
+        ]
+      },
+      {
+        "name": "applySedEdit",
+        "type": "function",
+        "file": "tools/BashTool/BashTool.tsx",
+        "signature": "async function applySedEdit(simulatedEdit: { filePath: string; newContent: string }, toolUseContext, parentMessage?): Promise<SimulatedSedEditResult>",
+        "purpose": "Applies a pre-computed sed edit (from permission dialog preview) directly to disk, bypassing sed execution, ensuring what the user saw is exactly what gets written.",
+        "dependencies": [
+          "utils/file.ts",
+          "utils/fileHistory.ts",
+          "services/mcp/vscodeSdkMcp.ts"
+        ]
+      },
+      {
+        "name": "interpretCommandResult",
+        "type": "function",
+        "file": "tools/BashTool/commandSemantics.ts",
+        "signature": "export function interpretCommandResult(command: string, exitCode: number, stdout: string, stderr: string): { isError: boolean; message?: string }",
+        "purpose": "Applies per-command exit-code semantics (grep exit 1 = no matches, not error; find exit 1 = partial success; diff exit 1 = differences found) to avoid false error signals.",
+        "dependencies": [
+          "utils/bash/commands.ts"
+        ]
+      },
+      {
+        "name": "isSearchOrReadBashCommand",
+        "type": "function",
+        "file": "tools/BashTool/BashTool.tsx",
+        "signature": "export function isSearchOrReadBashCommand(command: string): { isSearch: boolean; isRead: boolean; isList: boolean }",
+        "purpose": "Classifies compound bash commands as search/read/list for collapsible UI rendering; requires ALL pipeline parts to be read-type for the compound to qualify.",
+        "dependencies": [
+          "utils/bash/commands.ts"
+        ]
+      },
+      {
+        "name": "FileReadTool",
+        "type": "const",
+        "file": "tools/FileReadTool/FileReadTool.ts",
+        "signature": "export const FileReadTool = buildTool({ name: FILE_READ_TOOL_NAME, ... } satisfies ToolDef<InputSchema, Output>)",
+        "purpose": "Reads files of any type (text, image, PDF, Jupyter notebook) with token-limit enforcement, encoding detection, offset/limit pagination, and read-state tracking.",
+        "dependencies": [
+          "utils/permissions/filesystem.ts",
+          "utils/imageResizer.ts",
+          "utils/pdf.ts",
+          "utils/notebook.ts",
+          "utils/readFileInRange.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "MaxFileReadTokenExceededError",
+        "type": "class",
+        "file": "tools/FileReadTool/FileReadTool.ts",
+        "signature": "export class MaxFileReadTokenExceededError extends Error { constructor(public tokenCount: number, public maxTokens: number) }",
+        "purpose": "Thrown when file content exceeds the token limit, prompting the caller to use offset/limit parameters.",
+        "dependencies": []
+      },
+      {
+        "name": "registerFileReadListener",
+        "type": "function",
+        "file": "tools/FileReadTool/FileReadTool.ts",
+        "signature": "export function registerFileReadListener(listener: FileReadListener): () => void",
+        "purpose": "Observer registration for file-read events enabling other services (e.g., memory freshness) to react when files are read.",
+        "dependencies": []
+      },
+      {
+        "name": "BLOCKED_DEVICE_PATHS",
+        "type": "const",
+        "file": "tools/FileReadTool/FileReadTool.ts",
+        "signature": "const BLOCKED_DEVICE_PATHS = new Set(['/dev/zero', '/dev/random', '/dev/urandom', '/dev/full', '/dev/stdin', ...])",
+        "purpose": "Blocklist of device paths that would hang the process or produce infinite output if read.",
+        "dependencies": []
+      },
+      {
+        "name": "FileEditTool",
+        "type": "const",
+        "file": "tools/FileEditTool/FileEditTool.ts",
+        "signature": "export const FileEditTool = buildTool({ name: FILE_EDIT_TOOL_NAME, ... } satisfies ToolDef<InputSchema, FileEditOutput>)",
+        "purpose": "Performs exact-string-replacement edits with read-before-write enforcement, stale-write detection (mtime), multi-match protection, and LSP notification.",
+        "dependencies": [
+          "utils/permissions/filesystem.ts",
+          "utils/fileHistory.ts",
+          "utils/gitDiff.ts",
+          "services/lsp/manager.ts",
+          "services/teamMemorySync/teamMemSecretGuard.ts",
+          "tools/FileEditTool/utils.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "FileEditInput",
+        "type": "type",
+        "file": "tools/FileEditTool/types.ts",
+        "signature": "export type FileEditInput = z.output<InputSchema>",
+        "purpose": "Zod-validated edit input with file_path, old_string, new_string, and optional replace_all flag.",
+        "dependencies": [
+          "tools/FileEditTool/types.ts"
+        ]
+      },
+      {
+        "name": "FileWriteTool",
+        "type": "const",
+        "file": "tools/FileWriteTool/FileWriteTool.ts",
+        "signature": "export const FileWriteTool = buildTool({ name: FILE_WRITE_TOOL_NAME, ... } satisfies ToolDef<InputSchema, Output>)",
+        "purpose": "Writes full file content with read-before-write enforcement for existing files, directory auto-creation, secret guard, and structured diff output.",
+        "dependencies": [
+          "utils/permissions/filesystem.ts",
+          "utils/fileHistory.ts",
+          "utils/gitDiff.ts",
+          "services/lsp/manager.ts",
+          "services/teamMemorySync/teamMemSecretGuard.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "GlobTool",
+        "type": "const",
+        "file": "tools/GlobTool/GlobTool.ts",
+        "signature": "export const GlobTool = buildTool({ name: GLOB_TOOL_NAME, ... } satisfies ToolDef<InputSchema, Output>)",
+        "purpose": "File-pattern search using glob matching, limited to 100 results by default, with read permission checks and relative-path output.",
+        "dependencies": [
+          "utils/glob.ts",
+          "utils/permissions/filesystem.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "GrepTool",
+        "type": "const",
+        "file": "tools/GrepTool/GrepTool.ts",
+        "signature": "export const GrepTool = buildTool({ name: GREP_TOOL_NAME, ... } satisfies ToolDef<InputSchema, Output>)",
+        "purpose": "Regex content search backed by ripgrep with three output modes (content/files_with_matches/count), context lines, head_limit pagination, and VCS directory exclusion.",
+        "dependencies": [
+          "utils/ripgrep.ts",
+          "utils/permissions/filesystem.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "PowerShellTool",
+        "type": "const",
+        "file": "tools/PowerShellTool/PowerShellTool.tsx",
+        "signature": "export const PowerShellTool = buildTool({ name: POWERSHELL_TOOL_NAME, ... } satisfies ToolDef<InputSchema, Out, BashProgress>)",
+        "purpose": "Windows-native shell execution tool mirroring BashTool's architecture for PowerShell/pwsh, with case-insensitive cmdlet permission matching and the same background/sandbox machinery.",
+        "dependencies": [
+          "tools/PowerShellTool/powershellPermissions.ts",
+          "tools/PowerShellTool/powershellSecurity.ts",
+          "tools/PowerShellTool/readOnlyValidation.ts",
+          "tools/BashTool/shouldUseSandbox.ts",
+          "tasks/LocalShellTask/LocalShellTask.ts",
+          "utils/Shell.ts",
+          "Tool.ts"
+        ]
+      },
+      {
+        "name": "powershellToolHasPermission",
+        "type": "function",
+        "file": "tools/PowerShellTool/powershellPermissions.ts",
+        "signature": "export async function powershellToolHasPermission(input, context): Promise<PermissionResult>",
+        "purpose": "PowerShell permission gate analogous to bashToolHasPermission, using case-insensitive cmdlet matching and a custom PowerShell AST parser instead of tree-sitter.",
+        "dependencies": [
+          "utils/powershell/parser.ts",
+          "tools/PowerShellTool/powershellSecurity.ts",
+          "tools/PowerShellTool/pathValidation.ts",
+          "tools/PowerShellTool/readOnlyValidation.ts",
+          "tools/PowerShellTool/modeValidation.ts",
+          "tools/PowerShellTool/gitSafety.ts"
+        ]
+      },
+      {
+        "name": "SAFE_ENV_VARS",
+        "type": "const",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "const SAFE_ENV_VARS = new Set(['GOEXPERIMENT', 'GOOS', 'NODE_ENV', 'PYTHONUNBUFFERED', 'LANG', 'TZ', ...])",
+        "purpose": "Allowlist of env vars that cannot execute code or load libraries, safe to strip before permission-rule matching.",
+        "dependencies": []
+      },
+      {
+        "name": "ANT_ONLY_SAFE_ENV_VARS",
+        "type": "const",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "const ANT_ONLY_SAFE_ENV_VARS = new Set(['KUBECONFIG', 'DOCKER_HOST', 'AWS_PROFILE', 'CI', ...])",
+        "purpose": "Internal-only env var allowlist (USER_TYPE === 'ant') including cluster-targeting vars like DOCKER_HOST/KUBECONFIG that are intentionally excluded from external builds due to endpoint-redirect risk.",
+        "dependencies": []
+      },
+      {
+        "name": "BARE_SHELL_PREFIXES",
+        "type": "const",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "const BARE_SHELL_PREFIXES = new Set(['sh', 'bash', 'zsh', 'env', 'xargs', 'sudo', 'nice', 'nohup', ...])",
+        "purpose": "Set of commands that must never be suggested as permission-rule prefixes because Bash(bash:*) or Bash(sudo:*) would effectively grant arbitrary code execution.",
+        "dependencies": []
+      },
+      {
+        "name": "MAX_SUBCOMMANDS_FOR_SECURITY_CHECK",
+        "type": "const",
+        "file": "tools/BashTool/bashPermissions.ts",
+        "signature": "export const MAX_SUBCOMMANDS_FOR_SECURITY_CHECK = 50",
+        "purpose": "Cap on subcommands before falling back to 'ask'; prevents exponential growth in tree-sitter + validator calls that caused REPL freezes on complex compound commands (CC-643).",
+        "dependencies": []
+      }
+    ],
+    "data_flows": [
+      {
+        "from": "BashTool.call",
+        "to": "runShellCommand",
+        "via": "async generator delegation",
+        "data": "BashToolInput, abortController, setAppState, setToolJSX, preventCwdChanges, isMainThread"
+      },
+      {
+        "from": "runShellCommand",
+        "to": "exec (utils/Shell.ts)",
+        "via": "await",
+        "data": "command string, timeout, onProgress callback, preventCwdChanges, shouldUseSandbox flag"
+      },
+      {
+        "from": "BashTool.checkPermissions",
+        "to": "bashToolHasPermission",
+        "via": "direct call",
+        "data": "BashToolInput, ToolUseContext"
+      },
+      {
+        "from": "bashToolHasPermission",
+        "to": "parseCommandRaw (utils/bash/ast.ts)",
+        "via": "await",
+        "data": "command string \u2192 ParseForSecurityResult with kind: simple | too-complex | parse-unavailable"
+      },
+      {
+        "from": "bashToolHasPermission",
+        "to": "bashToolCheckPermission",
+        "via": "per-subcommand loop call",
+        "data": "individual subcommand string, toolPermissionContext, astCommand"
+      },
+      {
+        "from": "bashToolCheckPermission",
+        "to": "stripSafeWrappers \u2192 filterRulesByContentsMatchingInput",
+        "via": "sync call chain",
+        "data": "normalized command \u2192 matching deny/ask/allow PermissionRules"
+      },
+      {
+        "from": "bashToolCheckPermission",
+        "to": "checkPathConstraints",
+        "via": "sync call",
+        "data": "base command + extracted args + cwd + toolPermissionContext"
+      },
+      {
+        "from": "bashToolCheckPermission",
+        "to": "bashCommandIsSafeAsync (bashSecurity.ts)",
+        "via": "await",
+        "data": "command string \u2192 PermissionResult (allow/ask/passthrough)"
+      },
+      {
+        "from": "FileEditTool.validateInput",
+        "to": "readFileState.get(fullFilePath)",
+        "via": "Map lookup",
+        "data": "file path \u2192 { content, timestamp, offset, limit, isPartialView }"
+      },
+      {
+        "from": "FileEditTool.call",
+        "to": "getLspServerManager().notifyFileChanged",
+        "via": "async call",
+        "data": "absolute file path after write"
+      },
+      {
+        "from": "FileReadTool.call",
+        "to": "toolUseContext.readFileState.set",
+        "via": "Map write",
+        "data": "filePath \u2192 { content, timestamp, offset, limit } for stale-write detection"
+      },
+      {
+        "from": "GrepTool.call",
+        "to": "ripGrep (utils/ripgrep.ts)",
+        "via": "await",
+        "data": "pattern, path, rg args array \u2192 stdout string"
+      },
+      {
+        "from": "GlobTool.call",
+        "to": "glob (utils/glob.ts)",
+        "via": "await",
+        "data": "pattern, absolutePath, limit, abortSignal, toolPermissionContext \u2192 { files, truncated }"
+      },
+      {
+        "from": "applySedEdit",
+        "to": "toolUseContext.readFileState.set",
+        "via": "Map write",
+        "data": "updated file content + new mtime to prevent stale-write false positives"
+      },
+      {
+        "from": "bashToolHasPermission",
+        "to": "classifyBashCommand (utils/permissions/bashClassifier.ts)",
+        "via": "conditional await (BASH_CLASSIFIER feature flag)",
+        "data": "command string \u2192 ClassifierResult { behavior: allow|ask|deny, confidence, matchedDescription }"
+      }
+    ]
+  },
+  "interpretation": {
+    "patterns": [
+      {
+        "name": "Layered Security Normalization Before Rule Matching",
+        "description": "Permission matching always normalizes commands through multiple stripping phases before comparing against rules: (1) strip full-line comments, (2) strip safe env vars from an explicit allowlist, (3) strip safe wrapper commands (timeout/time/nice/nohup). For deny/ask rules an additional iterative fixed-point pass strips ALL leading env vars regardless of allowlist. This asymmetry \u2014 safe allowlist for allow rules, unrestricted stripping for deny rules \u2014 directly reflects the security threat model: allow rules must not be fooled by DOCKER_HOST= prefixes, but deny rules must never be bypassed by any env var prefix.",
+        "evidence": [
+          "tools/BashTool/bashPermissions.ts:524-615 (stripSafeWrappers)",
+          "tools/BashTool/bashPermissions.ts:733-776 (stripAllLeadingEnvVars)",
+          "tools/BashTool/bashPermissions.ts:806-853 (filterRulesByContentsMatchingInput fixed-point loop)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Sed-as-FileEdit Interception",
+        "description": "When BashTool detects a `sed -i` in-place substitution command it intercepts the execution entirely: the permission dialog shows a file-diff preview, the user sees the exact change, and if approved the tool writes the pre-computed result via applySedEdit rather than running sed. This gives sed the same visual experience as FileEditTool while preserving backward compatibility with scripts that use sed.",
+        "evidence": [
+          "tools/BashTool/sedEditParser.ts:49-60 (parseSedEditCommand)",
+          "tools/BashTool/BashTool.tsx:488-497 (userFacingName renders as file edit)",
+          "tools/BashTool/BashTool.tsx:627-629 (call intercepts _simulatedSedEdit)",
+          "tools/BashTool/BashTool.tsx:360-418 (applySedEdit)"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Read-Before-Write Enforcement via readFileState Map",
+        "description": "Both FileEditTool and FileWriteTool enforce that a file must have been read in the current session before it can be written, using a shared readFileState Map keyed by absolute path. The map stores content + mtime; if the file's mtime advances beyond the stored timestamp the write is blocked with 'file modified since read'. This prevents the classic TOCTOU race where Claude edits a file that was modified externally after Claude read it. FileEditTool additionally stores actual content for full-read operations to handle Windows cloud-sync mtime jitter.",
+        "evidence": [
+          "tools/FileEditTool/FileEditTool.ts:275-311 (readTimestamp check + content fallback)",
+          "tools/FileWriteTool/FileWriteTool.ts:198-219 (readTimestamp + mtime check)",
+          "tools/FileReadTool/FileReadTool.ts:398-399 (checkPermissions sets read state)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Tree-Sitter AST as Canonical Security Boundary (Shadow Mode)",
+        "description": "bashToolHasPermission parses commands with tree-sitter WASM to get an authoritative AST before any regex-based checks. The result determines whether to trust splitCommand's subcommand decomposition. There is also an explicit 'shadow mode' (TREE_SITTER_BASH_SHADOW feature flag) where tree-sitter parses and logs divergence from the legacy regex path but is then forced to parse-unavailable so the legacy path remains authoritative. This means tree-sitter is in production observation but not yet the enforcement mechanism.",
+        "evidence": [
+          "tools/BashTool/bashPermissions.ts:1688-1739 (astRoot parse + shadow mode)",
+          "tools/BashTool/bashPermissions.ts:1741-1759 (too-complex handling)",
+          "tools/BashTool/bashPermissions.ts:1707-1738 (shadow observational-only logic)"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Auto-Backgrounding Dual-Trigger Architecture",
+        "description": "Long-running bash commands can be backgrounded in two ways: (1) shellCommand.onTimeout fires when the process exceeds the default timeout, converting it to a background task with output written to disk; (2) in Kairos assistant mode, a setTimeout at ASSISTANT_BLOCKING_BUDGET_MS (15s) auto-backgrounds the command if still running so the agent can remain responsive. Both paths use the same spawnBackgroundTask/backgroundExistingForegroundTask machinery and produce a backgroundTaskId in the output.",
+        "evidence": [
+          "tools/BashTool/BashTool.tsx:966-970 (shellCommand.onTimeout hook)",
+          "tools/BashTool/BashTool.tsx:976-983 (Kairos assistant auto-background)",
+          "tools/BashTool/BashTool.tsx:904-920 (spawnBackgroundTask helper)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Compound-Command Deny-Rule Bypass Prevention",
+        "description": "When matching prefix/wildcard allow rules, compound commands (A && B) are skipped unless the rule explicitly covers compound syntax \u2014 preventing `ls && denied_cmd` from matching a Bash(ls:*) allow rule. But for deny/ask rules this protection is inverted: deny rules ALWAYS match individual subcommands within a compound expression, so `ls && rm -rf /` still hits a `Bash(rm:*)` deny rule.",
+        "evidence": [
+          "tools/BashTool/bashPermissions.ts:855-868 (isCompoundCommand map, matchMode prefix only)",
+          "tools/BashTool/bashPermissions.ts:811-813 (skipCompoundCheck comment: deny rules must match compound commands)"
+        ],
+        "confidence": "high",
+        "surprising": false
+      }
+    ]
+  },
+  "cross_references": [
+    {
+      "symbol": "buildTool / ToolDef",
+      "referenced_in": [
+        "tools/BashTool/BashTool.tsx",
+        "tools/FileReadTool/FileReadTool.ts",
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts",
+        "tools/GlobTool/GlobTool.ts",
+        "tools/GrepTool/GrepTool.ts",
+        "tools/PowerShellTool/PowerShellTool.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "checkReadPermissionForTool",
+      "referenced_in": [
+        "tools/FileReadTool/FileReadTool.ts",
+        "tools/GlobTool/GlobTool.ts",
+        "tools/GrepTool/GrepTool.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "checkWritePermissionForTool",
+      "referenced_in": [
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "SandboxManager",
+      "referenced_in": [
+        "tools/BashTool/BashTool.tsx",
+        "tools/BashTool/bashPermissions.ts",
+        "tools/BashTool/readOnlyValidation.ts",
+        "tools/BashTool/shouldUseSandbox.ts",
+        "tools/PowerShellTool/PowerShellTool.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "stripSafeWrappers",
+      "referenced_in": [
+        "tools/BashTool/pathValidation.ts",
+        "tools/BashTool/shouldUseSandbox.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "matchWildcardPattern / shellRuleMatching",
+      "referenced_in": [
+        "tools/BashTool/bashPermissions.ts",
+        "tools/FileReadTool/FileReadTool.ts",
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts",
+        "tools/GlobTool/GlobTool.ts",
+        "tools/GrepTool/GrepTool.ts",
+        "tools/PowerShellTool/powershellPermissions.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "LocalShellTask (spawnShellTask, registerForeground, backgroundExistingForegroundTask)",
+      "referenced_in": [
+        "tools/BashTool/BashTool.tsx",
+        "tools/PowerShellTool/PowerShellTool.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "notifyVscodeFileUpdated",
+      "referenced_in": [
+        "tools/BashTool/BashTool.tsx",
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "fileHistoryTrackEdit",
+      "referenced_in": [
+        "tools/BashTool/BashTool.tsx",
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "checkTeamMemSecrets",
+      "referenced_in": [
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "BashTool (shouldUseSandbox import)",
+      "referenced_in": [
+        "tools/PowerShellTool/PowerShellTool.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "getLspServerManager",
+      "referenced_in": [
+        "tools/FileEditTool/FileEditTool.ts",
+        "tools/FileWriteTool/FileWriteTool.ts"
+      ],
+      "relationship": "imports"
+    }
+  ],
+  "surprises": [
+    "sed -i commands are fully intercepted and re-routed through a file-diff preview + applySedEdit path, bypassing actual sed execution entirely after user approval",
+    "BASH_CLASSIFIER feature flag enables an LLM-based classifier (classifyBashCommand) as a permission arbiter \u2014 a model calling another model to decide if a shell command is safe",
+    "Tree-sitter bash parsing is deployed in shadow/observational mode only: the AST is computed and divergence logged, then forcibly discarded so legacy regex remains authoritative",
+    "ANT_ONLY_SAFE_ENV_VARS includes DOCKER_HOST and KUBECONFIG \u2014 stripping these vars redirects Docker/kubectl targets, and this is explicitly acknowledged as an intentional risk accepted only for internal Anthropic users",
+    "BashTool's _simulatedSedEdit field is deliberately hidden from the model-facing Zod schema (omitted via .omit()) to prevent the model from bypassing permission checks by pairing an innocuous command with an arbitrary file write",
+    "FileReadTool.maxResultSizeChars is set to Infinity \u2014 output persistence to disk is explicitly disabled because output is bounded by token limits, not char length",
+    "Bun's feature() DCE budget is hit by bashToolHasPermission's complexity; import aliases inside the function push it over the threshold, causing silent false evaluation of feature('BASH_CLASSIFIER') \u2014 worked around by extracting aliases as top-level const rebindings",
+    "PowerShellTool imports shouldUseSandbox directly from BashTool/shouldUseSandbox.ts rather than having its own copy, meaning both shells share the same sandbox exclusion logic",
+    "The read-before-write check on Windows uses actual content comparison as a fallback when mtime advances without content change, to handle cloud-sync antivirus mtime jitter false positives",
+    "GrepTool hardcodes --max-columns 500 to prevent base64 or minified content from cluttering ripgrep output"
+  ]
+}

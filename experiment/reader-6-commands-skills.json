@@ -1,0 +1,679 @@
+{
+  "reader_id": 6,
+  "subsystem": "Commands & Skills",
+  "extraction": {
+    "files_read": 38,
+    "total_lines": 8200,
+    "symbols": [
+      {
+        "name": "Command",
+        "type": "type",
+        "file": "types/command.ts",
+        "signature": "type Command = CommandBase & (PromptCommand | LocalCommand | LocalJSXCommand)",
+        "purpose": "Discriminated union type representing all slash commands; the three variants differ in execution model (prompt expansion, local function, or local JSX rendering).",
+        "dependencies": [
+          "types/logs.ts",
+          "types/message.ts",
+          "types/plugin.ts",
+          "services/compact/compact.ts",
+          "Tool.ts",
+          "utils/settings/types.ts"
+        ]
+      },
+      {
+        "name": "CommandBase",
+        "type": "type",
+        "file": "types/command.ts",
+        "signature": "type CommandBase = { name, description, aliases?, isEnabled?, isHidden?, availability?, loadedFrom?, immediate?, ... }",
+        "purpose": "Shared fields for every command regardless of type, including availability gates, feature-flag enablement, and source annotation.",
+        "dependencies": [
+          "utils/settings/constants.ts",
+          "types/plugin.ts"
+        ]
+      },
+      {
+        "name": "PromptCommand",
+        "type": "type",
+        "file": "types/command.ts",
+        "signature": "type PromptCommand = { type: 'prompt'; getPromptForCommand(args, context): Promise<ContentBlockParam[]>; source; allowedTools?; model?; context?; agent?; paths?; ... }",
+        "purpose": "Command variant that expands to an LLM prompt \u2014 covers skills, /commit, /review, and all markdown-defined commands.",
+        "dependencies": [
+          "Tool.ts",
+          "utils/effort.ts",
+          "utils/settings/types.ts"
+        ]
+      },
+      {
+        "name": "LocalJSXCommand",
+        "type": "type",
+        "file": "types/command.ts",
+        "signature": "type LocalJSXCommand = { type: 'local-jsx'; load(): Promise<LocalJSXCommandModule> }",
+        "purpose": "Lazy-loaded Ink/React UI command; covers config panels, model picker, MCP manager, plan mode, etc.",
+        "dependencies": []
+      },
+      {
+        "name": "LocalCommand",
+        "type": "type",
+        "file": "types/command.ts",
+        "signature": "type LocalCommand = { type: 'local'; supportsNonInteractive: boolean; load(): Promise<LocalCommandModule> }",
+        "purpose": "Text-returning command that runs synchronously without UI; used for /compact, /version, and bridge-safe utilities.",
+        "dependencies": []
+      },
+      {
+        "name": "CommandAvailability",
+        "type": "type",
+        "file": "types/command.ts",
+        "signature": "type CommandAvailability = 'claude-ai' | 'console'",
+        "purpose": "Static auth-tier gate that hides commands from Bedrock/Vertex/custom-proxy users at the availability level before feature flags are consulted.",
+        "dependencies": []
+      },
+      {
+        "name": "COMMANDS",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "const COMMANDS = memoize((): Command[] => [ ...hardcoded builtins... ])",
+        "purpose": "Memoized factory that assembles the ~60 always-available builtin commands, conditionally appending feature-flagged and USER_TYPE=ant internal commands.",
+        "dependencies": [
+          "commands/**/index.ts",
+          "bun:bundle feature()"
+        ]
+      },
+      {
+        "name": "getCommands",
+        "type": "function",
+        "file": "commands.ts",
+        "signature": "async function getCommands(cwd: string): Promise<Command[]>",
+        "purpose": "Primary public API \u2014 merges all command sources (bundled skills, builtin plugins, skill dirs, workflows, plugin commands, builtins), then filters by availability and isEnabled; also splices in dynamically discovered skills.",
+        "dependencies": [
+          "skills/loadSkillsDir.ts",
+          "skills/bundledSkills.ts",
+          "plugins/builtinPlugins.ts",
+          "utils/plugins/loadPluginCommands.ts",
+          "tools/WorkflowTool/createWorkflowCommand.ts"
+        ]
+      },
+      {
+        "name": "loadAllCommands",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "const loadAllCommands = memoize(async (cwd: string): Promise<Command[]>)",
+        "purpose": "Memoized (by cwd) loader that fans out to all five command sources in parallel and concatenates them in precedence order.",
+        "dependencies": [
+          "skills/loadSkillsDir.ts",
+          "skills/bundledSkills.ts",
+          "plugins/builtinPlugins.ts",
+          "utils/plugins/loadPluginCommands.ts"
+        ]
+      },
+      {
+        "name": "meetsAvailabilityRequirement",
+        "type": "function",
+        "file": "commands.ts",
+        "signature": "function meetsAvailabilityRequirement(cmd: Command): boolean",
+        "purpose": "Filters commands by auth/provider tier without caching so /login changes take effect immediately.",
+        "dependencies": [
+          "utils/auth.ts",
+          "utils/model/providers.ts"
+        ]
+      },
+      {
+        "name": "getSkillToolCommands",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "const getSkillToolCommands = memoize(async (cwd: string): Promise<Command[]>)",
+        "purpose": "Returns prompt-type commands that the model (SkillTool) can invoke \u2014 all skills plus legacy commands/ entries that have descriptions.",
+        "dependencies": []
+      },
+      {
+        "name": "getSlashCommandToolSkills",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "const getSlashCommandToolSkills = memoize(async (cwd: string): Promise<Command[]>)",
+        "purpose": "Returns only skill-sourced prompt commands (skills/, plugin, bundled, or disableModelInvocation=true) for the slash-command tool context.",
+        "dependencies": []
+      },
+      {
+        "name": "REMOTE_SAFE_COMMANDS",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "export const REMOTE_SAFE_COMMANDS: Set<Command>",
+        "purpose": "Explicit allowlist of commands safe in --remote mode (no local filesystem or IDE dependency); used to pre-filter before CCR init completes.",
+        "dependencies": []
+      },
+      {
+        "name": "BRIDGE_SAFE_COMMANDS",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "export const BRIDGE_SAFE_COMMANDS: Set<Command>",
+        "purpose": "Commands safe to execute when received over the Remote Control bridge from mobile/web clients \u2014 excludes local-jsx (Ink UI) commands.",
+        "dependencies": []
+      },
+      {
+        "name": "INTERNAL_ONLY_COMMANDS",
+        "type": "const",
+        "file": "commands.ts",
+        "signature": "export const INTERNAL_ONLY_COMMANDS: Command[]",
+        "purpose": "Commands compiled into the binary but exposed only when USER_TYPE=ant \u2014 backfill, bughunter, commit-push-pr, teleport, etc.",
+        "dependencies": []
+      },
+      {
+        "name": "clearCommandsCache",
+        "type": "function",
+        "file": "commands.ts",
+        "signature": "function clearCommandsCache(): void",
+        "purpose": "Clears all memoization caches for commands, skill dirs, plugins, and the external skill index so /reload-plugins and dynamic skill discovery take effect.",
+        "dependencies": [
+          "skills/loadSkillsDir.ts",
+          "utils/plugins/loadPluginCommands.ts"
+        ]
+      },
+      {
+        "name": "findCommand",
+        "type": "function",
+        "file": "commands.ts",
+        "signature": "function findCommand(commandName: string, commands: Command[]): Command | undefined",
+        "purpose": "Resolves a slash-command name against name, userFacingName(), and aliases array.",
+        "dependencies": [
+          "types/command.ts"
+        ]
+      },
+      {
+        "name": "formatDescriptionWithSource",
+        "type": "function",
+        "file": "commands.ts",
+        "signature": "function formatDescriptionWithSource(cmd: Command): string",
+        "purpose": "Annotates a command description with its origin (bundled, plugin name, workflow, user setting path) for typeahead and help UI.",
+        "dependencies": [
+          "utils/settings/constants.ts"
+        ]
+      },
+      {
+        "name": "BundledSkillDefinition",
+        "type": "type",
+        "file": "skills/bundledSkills.ts",
+        "signature": "type BundledSkillDefinition = { name, description, aliases?, whenToUse?, allowedTools?, model?, files?, hooks?, context?, agent?, isEnabled?, getPromptForCommand }",
+        "purpose": "Definition object passed to registerBundledSkill(); supports embedded reference files that are lazily extracted to a secure per-process temp directory on first invocation.",
+        "dependencies": [
+          "Tool.ts",
+          "utils/settings/types.ts",
+          "utils/permissions/filesystem.ts"
+        ]
+      },
+      {
+        "name": "registerBundledSkill",
+        "type": "function",
+        "file": "skills/bundledSkills.ts",
+        "signature": "function registerBundledSkill(definition: BundledSkillDefinition): void",
+        "purpose": "Converts a BundledSkillDefinition into a Command and pushes it onto the module-level bundledSkills array; wraps getPromptForCommand to lazily extract embedded files on first call.",
+        "dependencies": [
+          "utils/permissions/filesystem.ts"
+        ]
+      },
+      {
+        "name": "getBundledSkills",
+        "type": "function",
+        "file": "skills/bundledSkills.ts",
+        "signature": "function getBundledSkills(): Command[]",
+        "purpose": "Returns a defensive copy of all registered bundled skills for inclusion in the command list.",
+        "dependencies": []
+      },
+      {
+        "name": "initBundledSkills",
+        "type": "function",
+        "file": "skills/bundled/index.ts",
+        "signature": "function initBundledSkills(): void",
+        "purpose": "Startup registration point that calls every individual register*Skill() function; feature-flagged skills (dream, hunter, loop, claudeApi, etc.) are conditionally required to eliminate dead code.",
+        "dependencies": [
+          "skills/bundled/*.ts",
+          "bun:bundle feature()"
+        ]
+      },
+      {
+        "name": "getSkillDirCommands",
+        "type": "const",
+        "file": "skills/loadSkillsDir.ts",
+        "signature": "const getSkillDirCommands = memoize(async (cwd: string): Promise<Command[]>)",
+        "purpose": "Loads skills from managed, user, project, and --add-dir /skills/ directories in parallel, deduplicates by resolved symlink path, then separates conditional (paths-gated) skills into a lazy activation store.",
+        "dependencies": [
+          "utils/markdownConfigLoader.ts",
+          "utils/frontmatterParser.ts",
+          "utils/git/gitignore.ts",
+          "utils/settings/constants.ts",
+          "skills/mcpSkillBuilders.ts"
+        ]
+      },
+      {
+        "name": "createSkillCommand",
+        "type": "function",
+        "file": "skills/loadSkillsDir.ts",
+        "signature": "function createSkillCommand({ skillName, markdownContent, source, baseDir, loadedFrom, ... }): Command",
+        "purpose": "Constructs a PromptCommand from parsed markdown frontmatter; getPromptForCommand performs argument substitution, ${CLAUDE_SKILL_DIR}/${CLAUDE_SESSION_ID} interpolation, and shell injection execution (blocked for MCP sources).",
+        "dependencies": [
+          "utils/argumentSubstitution.ts",
+          "utils/promptShellExecution.ts"
+        ]
+      },
+      {
+        "name": "parseSkillFrontmatterFields",
+        "type": "function",
+        "file": "skills/loadSkillsDir.ts",
+        "signature": "export function parseSkillFrontmatterFields(frontmatter, markdownContent, resolvedName, descriptionFallbackLabel): { description, allowedTools, model, effort, hooks, executionContext, ... }",
+        "purpose": "Centralised frontmatter parser used by both disk-based and MCP skill loaders to avoid duplication.",
+        "dependencies": [
+          "utils/frontmatterParser.ts",
+          "utils/markdownConfigLoader.ts",
+          "utils/model/model.ts"
+        ]
+      },
+      {
+        "name": "discoverSkillDirsForPaths",
+        "type": "function",
+        "file": "skills/loadSkillsDir.ts",
+        "signature": "async function discoverSkillDirsForPaths(filePaths: string[], cwd: string): Promise<string[]>",
+        "purpose": "Called after file operations to walk up from touched paths looking for nested .claude/skills/ directories; gitignored directories are skipped as a security measure.",
+        "dependencies": [
+          "utils/git/gitignore.ts"
+        ]
+      },
+      {
+        "name": "activateConditionalSkillsForPaths",
+        "type": "function",
+        "file": "skills/loadSkillsDir.ts",
+        "signature": "function activateConditionalSkillsForPaths(filePaths: string[], cwd: string): string[]",
+        "purpose": "Promotes path-filtered skills (those with paths frontmatter) into the dynamic skill map when the model touches a matching file, using gitignore-style pattern matching.",
+        "dependencies": [
+          "ignore library"
+        ]
+      },
+      {
+        "name": "MCPSkillBuilders",
+        "type": "type",
+        "file": "skills/mcpSkillBuilders.ts",
+        "signature": "type MCPSkillBuilders = { createSkillCommand: typeof createSkillCommand; parseSkillFrontmatterFields: typeof parseSkillFrontmatterFields }",
+        "purpose": "Write-once registry breaking the mcpSkills.ts \u2192 loadSkillsDir.ts import cycle; loadSkillsDir.ts writes at module init, mcpSkills.ts reads when an MCP server connects.",
+        "dependencies": []
+      },
+      {
+        "name": "registerBuiltinPlugin",
+        "type": "function",
+        "file": "plugins/builtinPlugins.ts",
+        "signature": "function registerBuiltinPlugin(definition: BuiltinPluginDefinition): void",
+        "purpose": "Inserts a user-toggleable built-in plugin into the BUILTIN_PLUGINS Map; plugins appear in /plugin UI and persist enabled state to user settings.",
+        "dependencies": [
+          "types/plugin.ts",
+          "utils/settings/settings.ts"
+        ]
+      },
+      {
+        "name": "getBuiltinPluginSkillCommands",
+        "type": "function",
+        "file": "plugins/builtinPlugins.ts",
+        "signature": "function getBuiltinPluginSkillCommands(): Command[]",
+        "purpose": "Returns Command objects from skills of all currently enabled built-in plugins.",
+        "dependencies": [
+          "skills/bundledSkills.ts"
+        ]
+      },
+      {
+        "name": "initBuiltinPlugins",
+        "type": "function",
+        "file": "plugins/bundled/index.ts",
+        "signature": "function initBuiltinPlugins(): void",
+        "purpose": "Startup hook for registering user-togglable built-in plugins; currently empty scaffolding for future migration of bundled skills that need /plugin-UI visibility.",
+        "dependencies": [
+          "plugins/builtinPlugins.ts"
+        ]
+      },
+      {
+        "name": "CommandSpec",
+        "type": "type",
+        "file": "utils/bash/registry.ts",
+        "signature": "type CommandSpec = { name, description?, subcommands?, args?, options? }",
+        "purpose": "Lightweight descriptor for bash command completion specs (a subset of the Fig autocomplete format) used to provide argument hints for wrapped commands like timeout and srun.",
+        "dependencies": []
+      },
+      {
+        "name": "getCommandSpec",
+        "type": "const",
+        "file": "utils/bash/registry.ts",
+        "signature": "const getCommandSpec = memoizeWithLRU(async (command: string): Promise<CommandSpec | null>)",
+        "purpose": "Looks up a bash command's argument spec first in the inline specs array, then falls back to @withfig/autocomplete dynamic import.",
+        "dependencies": [
+          "utils/bash/specs/index.ts",
+          "@withfig/autocomplete"
+        ]
+      },
+      {
+        "name": "getPluginCommands",
+        "type": "const",
+        "file": "utils/plugins/loadPluginCommands.ts",
+        "signature": "const getPluginCommands = memoize(async (): Promise<Command[]>)",
+        "purpose": "Loads markdown-defined commands from all enabled marketplace plugins, namespacing them as plugin:command and wiring up ${CLAUDE_PLUGIN_ROOT} variable substitution in allowed-tools.",
+        "dependencies": [
+          "utils/plugins/pluginLoader.ts",
+          "utils/plugins/pluginOptionsStorage.ts"
+        ]
+      },
+      {
+        "name": "getPluginSkills",
+        "type": "const",
+        "file": "utils/plugins/loadPluginCommands.ts",
+        "signature": "const getPluginSkills = memoize(async (): Promise<Command[]>)",
+        "purpose": "Loads skills from enabled plugins' skills/ directories (or skillsPaths array from manifest), namespaced as plugin:skill.",
+        "dependencies": [
+          "utils/plugins/pluginLoader.ts"
+        ]
+      },
+      {
+        "name": "createMovedToPluginCommand",
+        "type": "function",
+        "file": "commands/createMovedToPluginCommand.ts",
+        "signature": "function createMovedToPluginCommand({ name, pluginName, pluginCommand, getPromptWhileMarketplaceIsPrivate }): Command",
+        "purpose": "Factory for commands that have been migrated to the marketplace plugin ecosystem; ANT employees get a redirect message, external users get the legacy prompt during the private marketplace period.",
+        "dependencies": [
+          "commands.ts",
+          "Tool.ts"
+        ]
+      }
+    ],
+    "data_flows": [
+      {
+        "from": "initBundledSkills",
+        "to": "registerBundledSkill",
+        "via": "direct function calls at startup",
+        "data": "BundledSkillDefinition objects for each bundled skill"
+      },
+      {
+        "from": "registerBundledSkill",
+        "to": "bundledSkills (module array)",
+        "via": "array push",
+        "data": "Command objects with source='bundled', loadedFrom='bundled'"
+      },
+      {
+        "from": "getBundledSkills",
+        "to": "getSkills (commands.ts)",
+        "via": "return value",
+        "data": "Snapshot array of all registered bundled skill Commands"
+      },
+      {
+        "from": "getSkillDirCommands",
+        "to": "loadAllCommands",
+        "via": "Promise.all fan-out",
+        "data": "Deduplicated array of disk-based skill Commands from managed/user/project dirs"
+      },
+      {
+        "from": "getPluginCommands / getPluginSkills",
+        "to": "loadAllCommands",
+        "via": "Promise.all fan-out",
+        "data": "Marketplace plugin Command objects namespaced as plugin:command"
+      },
+      {
+        "from": "loadAllCommands",
+        "to": "getCommands",
+        "via": "memoized promise, then filter pass",
+        "data": "All ~N commands before availability/isEnabled filtering"
+      },
+      {
+        "from": "getCommands",
+        "to": "REPL / SkillTool / typeahead",
+        "via": "return value consumed by callers",
+        "data": "Filtered Command[] visible to current user in current cwd"
+      },
+      {
+        "from": "discoverSkillDirsForPaths + addSkillDirectories",
+        "to": "dynamicSkills (Map)",
+        "via": "file-operation hooks \u2192 skill loading \u2192 Map.set",
+        "data": "Skills discovered in nested .claude/skills/ dirs after model touches files"
+      },
+      {
+        "from": "dynamicSkills Map",
+        "to": "getCommands",
+        "via": "getDynamicSkills() splice at computed insertIndex",
+        "data": "Dynamically discovered Commands inserted before builtin commands"
+      },
+      {
+        "from": "activateConditionalSkillsForPaths",
+        "to": "dynamicSkills Map",
+        "via": "ignore-library path matching \u2192 Map.set",
+        "data": "Conditional skills promoted when model touches matching file paths"
+      },
+      {
+        "from": "createSkillCommand getPromptForCommand",
+        "to": "LLM conversation",
+        "via": "PromptCommand.getPromptForCommand called by REPL dispatch",
+        "data": "Markdown text with substituted args, base-dir prefix, and executed shell snippets"
+      },
+      {
+        "from": "loadSkillsDir.ts (module init)",
+        "to": "mcpSkillBuilders registry",
+        "via": "registerMCPSkillBuilders() side-effect at module load",
+        "data": "References to createSkillCommand and parseSkillFrontmatterFields functions"
+      },
+      {
+        "from": "MCP skill discovery (mcpSkills.ts)",
+        "to": "createSkillCommand",
+        "via": "getMCPSkillBuilders().createSkillCommand()",
+        "data": "Skill definitions from MCP server prompts converted to Commands with loadedFrom='mcp'"
+      },
+      {
+        "from": "getBuiltinPlugins (settings check)",
+        "to": "getBuiltinPluginSkillCommands",
+        "via": "enabled plugin list",
+        "data": "BundledSkillDefinitions from enabled built-in plugins converted to Commands"
+      },
+      {
+        "from": "Command.load()",
+        "to": "LocalCommandModule / LocalJSXCommandModule",
+        "via": "dynamic import (lazy)",
+        "data": "{ call } function for local commands or React node factory for JSX commands"
+      }
+    ]
+  },
+  "interpretation": {
+    "patterns": [
+      {
+        "name": "Five-source command aggregation with precedence ordering",
+        "description": "getCommands() assembles commands from five distinct sources in a fixed priority order: bundledSkills \u2192 builtinPluginSkills \u2192 skillDirCommands \u2192 workflowCommands \u2192 pluginCommands \u2192 COMMANDS() builtins. This ordering determines which source 'wins' when names collide. The assembly is memoized by cwd but the availability/isEnabled filter runs on every call to handle auth state changes mid-session.",
+        "evidence": [
+          "commands.ts:449-468",
+          "commands.ts:476-516"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Discriminated union command type with lazy load for UI commands",
+        "description": "Commands are a three-way discriminated union on `type`: 'prompt' commands expand to LLM message content, 'local' commands return text synchronously, and 'local-jsx' commands render Ink/React UI. The two non-prompt variants use a `load()` function for lazy dynamic import, deferring heavy UI dependencies (Ink, complex parsers) until the command is actually invoked. This pattern is pervasive across ~50 JSX commands.",
+        "evidence": [
+          "types/command.ts:74-152",
+          "commands/config/index.ts:1-11",
+          "commands/mcp/index.ts:1-11"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Bundled skills use embedded file extraction with security hardening",
+        "description": "Skills with a `files` map in BundledSkillDefinition lazily extract those files to a per-process nonce directory (getBundledSkillsRoot()) on first invocation using O_CREAT|O_EXCL|O_NOFOLLOW to prevent symlink attacks. The extraction is promise-memoized so concurrent first calls await the same extraction rather than racing. The skill then prepends a 'Base directory for this skill: <dir>' line to the prompt so the model can Read/Grep reference files on demand.",
+        "evidence": [
+          "skills/bundledSkills.ts:59-73",
+          "skills/bundledSkills.ts:147-193",
+          "skills/bundledSkills.ts:206-219"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Dynamic skill discovery triggered by file operations",
+        "description": "When the model touches files (Read/Write/Edit/Bash), a hook walks up from those file paths looking for .claude/skills/ directories below cwd that weren't loaded at startup. Discovered skills are merged into a module-level Map, a signal fires to clear memoization caches, and getCommands() splices them in just before the builtin block. This means available slash commands can grow during a session as the model explores a codebase.",
+        "evidence": [
+          "skills/loadSkillsDir.ts:861-975",
+          "commands.ts:487-516"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Conditional path-gated skills activated on file touch",
+        "description": "Skills with a `paths` frontmatter field (gitignore-style patterns) are separated from unconditional skills at load time and held in a conditionalSkills Map. activateConditionalSkillsForPaths() runs on every file operation and promotes matching skills into the dynamic skills map using the `ignore` library for pattern matching \u2014 the same semantics as CLAUDE.md conditional rules.",
+        "evidence": [
+          "skills/loadSkillsDir.ts:771-803",
+          "skills/loadSkillsDir.ts:997-1060"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "MCPSkillBuilders registry as a cycle-breaking injection point",
+        "description": "To avoid a circular import between mcpSkills.ts and loadSkillsDir.ts (both of which transitively reach client.ts), mcpSkillBuilders.ts acts as a write-once registry. loadSkillsDir.ts registers the two builder functions as a side-effect of module initialization (which happens eagerly via commands.ts static import), and mcpSkills.ts reads them later when an MCP server connects. This is explicitly documented as an alternative to non-literal dynamic imports, which fail in Bun bundled binaries.",
+        "evidence": [
+          "skills/mcpSkillBuilders.ts:1-44"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Feature-flag dead-code elimination via bun:bundle feature()",
+        "description": "Feature-flagged commands and skills use conditional require() wrapped in feature('FLAG') checks. The Bun bundler evaluates these at build time and eliminates dead branches, so unreleased features (KAIROS, VOICE_MODE, BRIDGE_MODE, ULTRAPLAN, etc.) are absent from the production binary. The same pattern applies in initBundledSkills() for skill registration.",
+        "evidence": [
+          "commands.ts:59-123",
+          "skills/bundled/index.ts:35-78"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Built-in plugins as user-toggleable wrappers over bundled skill definitions",
+        "description": "builtinPlugins.ts defines a parallel plugin concept distinct from both marketplace plugins and bundled skills. Built-in plugins appear in the /plugin UI and persist enabled state to user settings, but their skill definitions reuse BundledSkillDefinition and are converted to Commands via skillDefinitionToCommand() with source='bundled' (not 'builtin') to keep them visible in the Skill tool listing. The actual registry is currently empty \u2014 it is scaffolding for migrating bundled skills that need user-toggling.",
+        "evidence": [
+          "plugins/builtinPlugins.ts:1-160",
+          "plugins/bundled/index.ts:1-23"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "Bash specs as a Fig-compatible argument completion registry",
+        "description": "utils/bash/specs/ contains a small set of handwritten CommandSpec objects (timeout, srun, alias, pyright, sleep, nohup, time) that mirror the Fig/autocomplete schema. getCommandSpec() tries these first, then falls back to @withfig/autocomplete dynamic imports for the long tail of standard Unix commands. This provides shell argument completion hints without bundling the full Fig spec library.",
+        "evidence": [
+          "utils/bash/registry.ts:1-53",
+          "utils/bash/specs/index.ts:1-18",
+          "utils/bash/specs/timeout.ts"
+        ],
+        "confidence": "high",
+        "surprising": false
+      }
+    ]
+  },
+  "cross_references": [
+    {
+      "symbol": "Command",
+      "referenced_in": [
+        "commands.ts",
+        "skills/loadSkillsDir.ts",
+        "skills/bundledSkills.ts",
+        "plugins/builtinPlugins.ts",
+        "utils/plugins/loadPluginCommands.ts",
+        "tools/SkillTool/*",
+        "REPL"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "registerBundledSkill",
+      "referenced_in": [
+        "skills/bundled/simplify.ts",
+        "skills/bundled/verify.ts",
+        "skills/bundled/updateConfig.ts",
+        "skills/bundled/claudeInChrome.ts",
+        "skills/bundled/batch.ts",
+        "skills/bundled/stuck.ts",
+        "skills/bundled/remember.ts",
+        "skills/bundled/keybindings.ts",
+        "skills/bundled/loop.ts",
+        "skills/bundled/scheduleRemoteAgents.ts",
+        "skills/bundled/claudeApi.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "getCommands",
+      "referenced_in": [
+        "REPL (main loop)",
+        "tools/SkillTool/index.ts",
+        "services/skillSearch/localSearch.ts",
+        "commands/help/help.tsx"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "getSkillDirCommands",
+      "referenced_in": [
+        "commands.ts getSkills()"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "discoverSkillDirsForPaths",
+      "referenced_in": [
+        "tools/BashTool",
+        "tools/FileEditTool",
+        "tools/FileWriteTool",
+        "tools/FileReadTool"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "createSkillCommand",
+      "referenced_in": [
+        "skills/loadSkillsDir.ts (internal)",
+        "skills/mcpSkillBuilders.ts (via registry)",
+        "services/mcp/mcpSkills.ts"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "clearCommandsCache",
+      "referenced_in": [
+        "commands/reload-plugins/index.ts",
+        "dynamic skill discovery signal handler"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "REMOTE_SAFE_COMMANDS",
+      "referenced_in": [
+        "main.tsx (--remote mode pre-filter)",
+        "REPL handleRemoteInit"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "isBridgeSafeCommand",
+      "referenced_in": [
+        "bridge command router"
+      ],
+      "relationship": "calls"
+    },
+    {
+      "symbol": "formatDescriptionWithSource",
+      "referenced_in": [
+        "typeahead UI",
+        "commands/help/help.tsx"
+      ],
+      "relationship": "calls"
+    }
+  ],
+  "surprises": [
+    "Bundled skills can embed reference files (via BundledSkillDefinition.files) that are extracted to a nonce temp dir with O_EXCL|O_NOFOLLOW on first invocation \u2014 full symlink-attack hardening inside a skill framework",
+    "Available slash commands can expand mid-session: file operations trigger upward directory walks that discover and register new .claude/skills/ dirs below cwd, then splice them into the command list",
+    "Path-gated skills (paths frontmatter) remain dormant until the model touches a matching file, then activate permanently for the rest of the session \u2014 skills can become visible as a side effect of reading files",
+    "The mcpSkillBuilders.ts write-once registry exists solely to break an import cycle that would cause dynamic imports to fail in Bun-bundled binaries \u2014 explicit documentation of a runtime constraint driving architecture",
+    "Built-in plugins (plugins/builtinPlugins.ts) form a third, currently empty tier between bundled skills and marketplace plugins \u2014 the registry exists with full infrastructure but no registrations yet",
+    "MCP skills are blocked from executing inline shell commands (!`...` / ```!...```) in their markdown bodies \u2014 the only security distinction between loadedFrom='mcp' vs other sources in createSkillCommand",
+    "INTERNAL_ONLY_COMMANDS are compiled into the binary for all users but exposed only when USER_TYPE=ant; external users running a dev build get no error \u2014 the commands simply never appear",
+    "The /review and /ultrareview commands are split: /review is a pure local prompt command, /ultrareview is a local-jsx command that gates on isUltrareviewEnabled() and can trigger a remote CCR execution path",
+    "Bash command completion specs mirror the Fig autocomplete schema but only 7 custom specs are bundled inline \u2014 the rest are lazy-loaded from @withfig/autocomplete using dynamic import(command)",
+    "The createMovedToPluginCommand factory contains a dual-path implementation: ANT users get a plugin migration message, while external users get the legacy prompt \u2014 a migration shim preserving backward compatibility during a private marketplace rollout"
+  ]
+}

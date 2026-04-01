@@ -1,0 +1,852 @@
+{
+  "reader_id": 4,
+  "subsystem": "UI & Terminal",
+  "extraction": {
+    "files_read": 41,
+    "total_lines": 21135,
+    "symbols": [
+      {
+        "name": "Ink",
+        "type": "class",
+        "file": "ink/ink.tsx",
+        "signature": "export default class Ink { private readonly log: LogUpdate; private readonly terminal: Terminal; private scheduleRender: (() => void) & { cancel?: () => void }; ... }",
+        "purpose": "Core rendering engine: owns the React reconciler container, double-buffered Screen, input dispatch, selection state, and throttled render loop targeting ~60fps.",
+        "dependencies": [
+          "ink/reconciler.ts",
+          "ink/renderer.ts",
+          "ink/log-update.ts",
+          "ink/screen.ts",
+          "ink/terminal.ts",
+          "ink/frame.ts",
+          "ink/optimizer.ts",
+          "ink/selection.ts",
+          "ink/components/App.tsx"
+        ]
+      },
+      {
+        "name": "createRenderer",
+        "type": "function",
+        "file": "ink/renderer.ts",
+        "signature": "export default function createRenderer(node: DOMElement, stylePool: StylePool): Renderer",
+        "purpose": "Returns a closure that maps the DOM element tree through Yoga layout to a Screen buffer each frame, reusing Output across frames for char-cache efficiency.",
+        "dependencies": [
+          "ink/dom.ts",
+          "ink/output.ts",
+          "ink/screen.ts",
+          "ink/render-node-to-output.ts",
+          "ink/frame.ts"
+        ]
+      },
+      {
+        "name": "reconciler",
+        "type": "const",
+        "file": "ink/reconciler.ts",
+        "signature": "const reconciler = createReconciler({ ... }) (react-reconciler host config)",
+        "purpose": "React host reconciler that bridges React element tree mutations to Ink's custom DOM (DOMElement/TextNode), wiring focus management and event dispatchers.",
+        "dependencies": [
+          "ink/dom.ts",
+          "ink/focus.ts",
+          "ink/events/dispatcher.ts",
+          "ink/styles.ts",
+          "ink/layout/node.ts"
+        ]
+      },
+      {
+        "name": "LogUpdate",
+        "type": "class",
+        "file": "ink/log-update.ts",
+        "signature": "export class LogUpdate { constructor(private readonly options: Options) }",
+        "purpose": "Diffs two Frame screen buffers and emits minimal ANSI patch sequences to stdout, implementing the hot render path.",
+        "dependencies": [
+          "ink/frame.ts",
+          "ink/screen.ts",
+          "ink/termio/csi.ts",
+          "ink/termio/osc.ts"
+        ]
+      },
+      {
+        "name": "optimize",
+        "type": "function",
+        "file": "ink/optimizer.ts",
+        "signature": "export function optimize(diff: Diff): Diff",
+        "purpose": "Single-pass optimization over a Diff patch array: merges cursor moves, deduplicates hyperlinks, cancels hide/show cursor pairs, and strips no-op patches.",
+        "dependencies": [
+          "ink/frame.ts"
+        ]
+      },
+      {
+        "name": "Screen",
+        "type": "type",
+        "file": "ink/screen.ts",
+        "signature": "type Screen = { /* rows\u00d7cols cell grid, charPool, hyperlinkPool, stylePool */ }",
+        "purpose": "Double-buffered terminal cell grid where each cell stores an interned character ID, style ID, width, and hyperlink ID for O(1) frame diffing.",
+        "dependencies": [
+          "ink/layout/geometry.ts",
+          "ink/termio/ansi.ts"
+        ]
+      },
+      {
+        "name": "CharPool",
+        "type": "class",
+        "file": "ink/screen.ts",
+        "signature": "export class CharPool { intern(char: string): number; get(index: number): string }",
+        "purpose": "Session-lived string intern pool with ASCII fast-path array lookup; shared across front/back screens so blitRegion can copy IDs directly without re-interning.",
+        "dependencies": []
+      },
+      {
+        "name": "DOMElement",
+        "type": "type",
+        "file": "ink/dom.ts",
+        "signature": "export type DOMElement = { nodeName: ElementNames; attributes: Record<string, DOMNodeAttribute>; childNodes: DOMNode[]; dirty: boolean; yogaNode?: LayoutNode; scrollTop?: number; ... }",
+        "purpose": "Ink's virtual DOM node type, carrying Yoga layout node references, scroll state, event handlers, and dirty flags for blit optimization.",
+        "dependencies": [
+          "ink/layout/node.ts",
+          "ink/styles.ts"
+        ]
+      },
+      {
+        "name": "Output",
+        "type": "class",
+        "file": "ink/output.ts",
+        "signature": "class Output { /* collects write/blit/clear/clip ops then applies to Screen */ }",
+        "purpose": "Accumulates draw operations from the render tree traversal and applies them to the Screen buffer; caches tokenized grapheme clusters per unique line to avoid re-parsing between frames.",
+        "dependencies": [
+          "ink/screen.ts",
+          "ink/bidi.ts",
+          "ink/stringWidth.ts"
+        ]
+      },
+      {
+        "name": "renderToScreen",
+        "type": "function",
+        "file": "ink/render-to-screen.ts",
+        "signature": "export function renderToScreen(el: ReactElement, width: number): { screen: Screen; height: number }",
+        "purpose": "Off-screen render of a single React element to an isolated Screen buffer at a given width; used for incremental search to get exact (row, col) match positions.",
+        "dependencies": [
+          "ink/reconciler.ts",
+          "ink/dom.ts",
+          "ink/output.ts",
+          "ink/screen.ts",
+          "ink/render-node-to-output.ts"
+        ]
+      },
+      {
+        "name": "Frame",
+        "type": "type",
+        "file": "ink/frame.ts",
+        "signature": "export type Frame = { readonly screen: Screen; readonly viewport: Size; readonly cursor: Cursor; readonly scrollHint?: ScrollHint | null; readonly scrollDrainPending?: boolean }",
+        "purpose": "Immutable snapshot of one rendered frame: screen buffer, viewport dimensions, cursor state, and optional DECSTBM scroll optimization hints.",
+        "dependencies": [
+          "ink/screen.ts",
+          "ink/layout/geometry.ts"
+        ]
+      },
+      {
+        "name": "ScrollBox",
+        "type": "function",
+        "file": "ink/components/ScrollBox.tsx",
+        "signature": "export function ScrollBox(props: ScrollBoxProps & { ref?: Ref<ScrollBoxHandle> }): ReactNode",
+        "purpose": "Overflow-scroll Box with imperative scroll API (scrollTo/scrollBy/scrollToBottom), sticky-scroll pinning, clamp bounds for virtual scroll races, and viewport-culling at render time.",
+        "dependencies": [
+          "ink/components/Box.tsx",
+          "ink/dom.ts"
+        ]
+      },
+      {
+        "name": "ScrollBoxHandle",
+        "type": "type",
+        "file": "ink/components/ScrollBox.tsx",
+        "signature": "export type ScrollBoxHandle = { scrollTo: (y: number) => void; scrollBy: (dy: number) => void; scrollToElement: (el: DOMElement, offset?: number) => void; scrollToBottom: () => void; getScrollTop: () => number; isSticky: () => boolean; setClampBounds: (min, max) => void; ... }",
+        "purpose": "Imperative handle surfaced via ref for programmatic scroll control of a ScrollBox, including virtual-scroll clamp bounds to prevent blank-spacer flicker.",
+        "dependencies": [
+          "ink/dom.ts"
+        ]
+      },
+      {
+        "name": "AlternateScreen",
+        "type": "function",
+        "file": "ink/components/AlternateScreen.tsx",
+        "signature": "export function AlternateScreen({ children, mouseTracking?: boolean }): ReactNode",
+        "purpose": "Mounts children in the terminal's alt screen buffer (DEC 1049), constrains height to terminal rows, and optionally enables SGR mouse tracking; cleans up on unmount.",
+        "dependencies": [
+          "ink/instances.ts",
+          "ink/termio/dec.ts",
+          "ink/useTerminalNotification.ts",
+          "ink/components/Box.tsx"
+        ]
+      },
+      {
+        "name": "App (ink)",
+        "type": "class",
+        "file": "ink/components/App.tsx",
+        "signature": "class App extends PureComponent<Props> { /* stdin raw mode, keypress parsing, mouse, selection, focus, terminal query */ }",
+        "purpose": "Root Ink React component: manages raw mode on stdin, parses keypresses via parseMultipleKeypresses, dispatches InputEvents/TerminalFocusEvents, and owns terminal mode state (Kitty, mouse tracking).",
+        "dependencies": [
+          "ink/reconciler.ts",
+          "ink/parse-keypress.ts",
+          "ink/events/emitter.ts",
+          "ink/selection.ts",
+          "ink/terminal.ts",
+          "ink/terminal-querier.ts",
+          "ink/components/AppContext.ts",
+          "ink/components/StdinContext.ts"
+        ]
+      },
+      {
+        "name": "RawAnsi",
+        "type": "function",
+        "file": "ink/components/RawAnsi.tsx",
+        "signature": "export function RawAnsi({ lines: string[]; width: number }): ReactNode",
+        "purpose": "Bypass component that injects pre-rendered ANSI lines directly as a Yoga leaf node, skipping the normal React\u2192Yoga\u2192output roundtrip for already-formatted diff/syntax output.",
+        "dependencies": []
+      },
+      {
+        "name": "useInput",
+        "type": "function",
+        "file": "ink/hooks/use-input.ts",
+        "signature": "const useInput = (inputHandler: (input: string, key: Key, event: InputEvent) => void, options?: { isActive?: boolean }): void",
+        "purpose": "Hook for handling user keystrokes; uses useLayoutEffect (not useEffect) to enable raw mode synchronously during React commit, avoiding a cooked-mode tick on mount.",
+        "dependencies": [
+          "ink/hooks/use-stdin.ts",
+          "ink/events/input-event.ts"
+        ]
+      },
+      {
+        "name": "App (components)",
+        "type": "function",
+        "file": "components/App.tsx",
+        "signature": "export function App({ getFpsMetrics, stats, initialState, children }: Props): ReactNode",
+        "purpose": "Top-level application wrapper that nests FpsMetricsProvider, StatsProvider, and AppStateProvider to provide global context to the component tree.",
+        "dependencies": [
+          "context/fpsMetrics.ts",
+          "context/stats.ts",
+          "state/AppState.ts",
+          "state/onChangeAppState.ts"
+        ]
+      },
+      {
+        "name": "PermissionRequest",
+        "type": "function",
+        "file": "components/permissions/PermissionRequest.tsx",
+        "signature": "export function PermissionRequest({ toolUseConfirm, toolUseContext, onDone, onReject, verbose, workerBadge, setStickyFooter }): ReactNode",
+        "purpose": "Dispatches to a tool-specific permission UI component determined by permissionComponentForTool(), wires the interrupt keybinding, and triggers OS-level notifications on timeout.",
+        "dependencies": [
+          "components/permissions/BashPermissionRequest",
+          "components/permissions/FileEditPermissionRequest",
+          "components/permissions/FallbackPermissionRequest.tsx",
+          "keybindings/useKeybinding.ts",
+          "hooks/useNotifyAfterTimeout.ts"
+        ]
+      },
+      {
+        "name": "ToolUseConfirm",
+        "type": "type",
+        "file": "components/permissions/PermissionRequest.tsx",
+        "signature": "export type ToolUseConfirm<Input> = { assistantMessage, tool, description, input, toolUseID, permissionResult: PermissionDecision, onAllow, onReject, onAbort, recheckPermission, classifierAutoApproved?, onUserInteraction, ... }",
+        "purpose": "Data bag passed to every permission dialog, carrying the tool invocation, permission result, classifier state, and allow/reject callbacks.",
+        "dependencies": [
+          "Tool.ts",
+          "types/message.ts",
+          "utils/permissions/PermissionResult.ts"
+        ]
+      },
+      {
+        "name": "PermissionRequestProps",
+        "type": "type",
+        "file": "components/permissions/PermissionRequest.tsx",
+        "signature": "export type PermissionRequestProps<Input> = { toolUseConfirm, toolUseContext, onDone(), onReject(), verbose, workerBadge, setStickyFooter?: (jsx: ReactNode | null) => void }",
+        "purpose": "Shared props interface for all per-tool permission UI components, including a setStickyFooter callback for pinning response options during long plan reviews.",
+        "dependencies": [
+          "Tool.ts",
+          "utils/permissions/PermissionResult.ts"
+        ]
+      },
+      {
+        "name": "permissionComponentForTool",
+        "type": "function",
+        "file": "components/permissions/PermissionRequest.tsx",
+        "signature": "function permissionComponentForTool(tool: Tool): React.ComponentType<PermissionRequestProps>",
+        "purpose": "Switch-based routing function that maps a Tool instance to its corresponding permission UI component, falling back to FallbackPermissionRequest.",
+        "dependencies": [
+          "tools/BashTool",
+          "tools/FileEditTool",
+          "tools/FileWriteTool",
+          "tools/WebFetchTool",
+          "tools/NotebookEditTool",
+          "tools/SkillTool",
+          "tools/AskUserQuestionTool"
+        ]
+      },
+      {
+        "name": "PermissionDialog",
+        "type": "function",
+        "file": "components/permissions/PermissionDialog.tsx",
+        "signature": "export function PermissionDialog({ title, subtitle, color?, titleColor?, innerPaddingX?, workerBadge?, titleRight?, children }): ReactNode",
+        "purpose": "Shared shell for permission prompts: a rounded-top-only border box (no left/right/bottom borders) in the 'permission' theme color, with title row and padded children.",
+        "dependencies": [
+          "ink.ts (Box)",
+          "components/permissions/PermissionRequestTitle.tsx",
+          "utils/theme.ts"
+        ]
+      },
+      {
+        "name": "PermissionPrompt",
+        "type": "function",
+        "file": "components/permissions/PermissionPrompt.tsx",
+        "signature": "export function PermissionPrompt<T extends string>({ options, onSelect, onCancel, question?, toolAnalyticsContext? }): ReactNode",
+        "purpose": "Generic confirm/reject selector with optional Tab-expandable feedback input; handles analytics events and transforms PermissionPromptOption array into Select-compatible format.",
+        "dependencies": [
+          "components/CustomSelect/select.ts",
+          "keybindings/useKeybinding.ts",
+          "services/analytics/index.ts",
+          "state/AppState.ts"
+        ]
+      },
+      {
+        "name": "usePermissionRequestLogging",
+        "type": "function",
+        "file": "components/permissions/hooks.ts",
+        "signature": "export function usePermissionRequestLogging(toolUseConfirm: ToolUseConfirm, unaryEvent: UnaryEvent): void",
+        "purpose": "Logs analytics and unary events on permission prompt display; uses a ref to deduplicate re-fires within one dialog instance, preventing an infinite re-render loop.",
+        "dependencies": [
+          "services/analytics/index.ts",
+          "utils/unaryLogging.ts",
+          "state/AppState.ts",
+          "tools/BashTool"
+        ]
+      },
+      {
+        "name": "BashPermissionRequest",
+        "type": "function",
+        "file": "components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+        "signature": "export function BashPermissionRequest(props: PermissionRequestProps): ReactNode",
+        "purpose": "Bash-specific permission dialog with classifier auto-approve shimmer animation, sed-edit detection, sandbox status, destructive command warnings, and 'always allow' rule suggestions.",
+        "dependencies": [
+          "components/permissions/PermissionDialog.tsx",
+          "components/permissions/PermissionPrompt.tsx",
+          "tools/BashTool",
+          "utils/permissions/bashClassifier.ts",
+          "components/Spinner/ShimmerChar.tsx"
+        ]
+      },
+      {
+        "name": "Messages",
+        "type": "function",
+        "file": "components/Messages.tsx",
+        "signature": "export function Messages({ messages, tools, commands, ... }): ReactNode",
+        "purpose": "Main message list renderer: normalizes/reorders messages, applies collapse groupings (read/search/hooks), renders LogoHeader, delegates to MessageRow per message, and gates between virtual (fullscreen) and inline scroll.",
+        "dependencies": [
+          "components/MessageRow.tsx",
+          "components/VirtualMessageList.tsx",
+          "components/LogoV2",
+          "utils/messages.ts",
+          "utils/collapseReadSearch.ts",
+          "utils/groupToolUses.ts"
+        ]
+      },
+      {
+        "name": "Message",
+        "type": "function",
+        "file": "components/Message.tsx",
+        "signature": "export function Message({ message, lookups, tools, commands, verbose, ... }): ReactNode",
+        "purpose": "Switch dispatcher that renders the correct message component (AssistantTextMessage, UserTextMessage, AssistantToolUseMessage, etc.) based on message.type.",
+        "dependencies": [
+          "components/messages/AssistantTextMessage.tsx",
+          "components/messages/UserTextMessage.tsx",
+          "components/messages/AssistantToolUseMessage.tsx",
+          "components/messages/UserToolResultMessage",
+          "components/CompactSummary.tsx"
+        ]
+      },
+      {
+        "name": "MessageRow",
+        "type": "function",
+        "file": "components/MessageRow.tsx",
+        "signature": "export function MessageRow({ message, isUserContinuation, hasContentAfter, tools, ... }): ReactNode",
+        "purpose": "Per-message container that wraps Message with MessageModel timestamp display, OffscreenFreeze, and animation/dot state; also exports hasContentAfterIndex helper.",
+        "dependencies": [
+          "components/Message.tsx",
+          "components/MessageModel.tsx",
+          "components/MessageTimestamp.tsx",
+          "components/OffscreenFreeze.tsx"
+        ]
+      },
+      {
+        "name": "VirtualMessageList",
+        "type": "function",
+        "file": "components/VirtualMessageList.tsx",
+        "signature": "export function VirtualMessageList({ ... }): ReactNode (with ref: JumpHandle)",
+        "purpose": "Virtualized message list over ScrollBox: mounts only visible MessageRows, implements incremental search with renderToScreen, manages sticky-prompt chrome via ScrollChromeContext.",
+        "dependencies": [
+          "hooks/useVirtualScroll.ts",
+          "ink/components/ScrollBox.tsx",
+          "ink/render-to-screen.ts",
+          "components/FullscreenLayout.tsx"
+        ]
+      },
+      {
+        "name": "FullscreenLayout",
+        "type": "function",
+        "file": "components/FullscreenLayout.tsx",
+        "signature": "export function FullscreenLayout({ scrollable, bottom, overlay?, modal?, scrollRef?, ... }): ReactNode",
+        "purpose": "Two-region layout for fullscreen mode: a ScrollBox for the scrollable transcript and a pinned bottom slot for the prompt/spinner; handles the modal pane overlay and sticky-prompt pill via ScrollChromeContext.",
+        "dependencies": [
+          "ink/components/ScrollBox.tsx",
+          "ink.ts (Box, Text)",
+          "context/promptOverlayContext.ts",
+          "context/modalContext.ts"
+        ]
+      },
+      {
+        "name": "OffscreenFreeze",
+        "type": "function",
+        "file": "components/OffscreenFreeze.tsx",
+        "signature": "export function OffscreenFreeze({ children }: Props): ReactNode",
+        "purpose": "Returns a cached ReactElement reference when the wrapped content is outside the terminal viewport, preventing timer-driven re-renders (spinners, counters) on scrolled-off messages from triggering full terminal resets.",
+        "dependencies": [
+          "ink/hooks/use-terminal-viewport.ts",
+          "components/messageActions.ts"
+        ]
+      },
+      {
+        "name": "Markdown / StreamingMarkdown",
+        "type": "function",
+        "file": "components/Markdown.tsx",
+        "signature": "export function Markdown({ children: string; dimColor?: boolean }): ReactNode",
+        "purpose": "Renders markdown text using the marked lexer with an LRU module-level token cache (500 entries), falling back to a single-paragraph fast-path for plain text lacking markdown syntax.",
+        "dependencies": [
+          "ink.ts (Ansi, Box)",
+          "utils/markdown.ts",
+          "utils/cliHighlight.ts",
+          "components/MarkdownTable.tsx"
+        ]
+      },
+      {
+        "name": "ThemeProvider",
+        "type": "function",
+        "file": "components/design-system/ThemeProvider.tsx",
+        "signature": "export function ThemeProvider({ children, initialState?, onThemeSave? }): ReactNode",
+        "purpose": "Provides ThemeContext with live theme resolution (dark/light/auto), preview mode for the theme picker, and system-theme polling via OSC 11 terminal query.",
+        "dependencies": [
+          "utils/config.ts",
+          "utils/theme.ts",
+          "utils/systemTheme.ts",
+          "ink/hooks/use-stdin.ts"
+        ]
+      },
+      {
+        "name": "Dialog",
+        "type": "function",
+        "file": "components/design-system/Dialog.tsx",
+        "signature": "export function Dialog({ title, subtitle, children, onCancel, color?, hideInputGuide?, isCancelActive? }): ReactNode",
+        "purpose": "Confirm/cancel modal shell with built-in Esc/n cancel keybindings, Ctrl+C/D exit handlers, and an optional keyboard-shortcut guide footer.",
+        "dependencies": [
+          "components/design-system/Pane.tsx",
+          "keybindings/useKeybinding.ts",
+          "ink.ts (Box, Text)"
+        ]
+      },
+      {
+        "name": "Pane",
+        "type": "function",
+        "file": "components/design-system/Pane.tsx",
+        "signature": "export function Pane({ children, color? }): ReactNode",
+        "purpose": "Slash-command screen container: top colored divider line, one-row gap above, horizontal padding; adapts when inside a modal (skips frame so the modal's border is the only frame).",
+        "dependencies": [
+          "components/design-system/Divider.tsx",
+          "context/modalContext.ts",
+          "ink.ts (Box)"
+        ]
+      },
+      {
+        "name": "StatusLine",
+        "type": "function",
+        "file": "components/StatusLine.tsx",
+        "signature": "export function StatusLine({ messages, ... }): ReactNode",
+        "purpose": "Bottom status bar showing model name, permission mode, cwd, context usage percentage, session title, and vim mode; suppressed in Kairos assistant mode.",
+        "dependencies": [
+          "state/AppState.ts",
+          "hooks/useSettings.ts",
+          "utils/tokens.ts",
+          "utils/sessionStorage.ts",
+          "ink.ts (Ansi, Box, Text)"
+        ]
+      },
+      {
+        "name": "StructuredIO",
+        "type": "class",
+        "file": "cli/structuredIO.ts",
+        "signature": "export class StructuredIO { readonly structuredInput: AsyncGenerator<StdinMessage | SDKMessage>; private pendingRequests: Map<string, PendingRequest<unknown>>; ... }",
+        "purpose": "SDK non-interactive mode I/O class: reads NDJSON from stdin, serializes permission requests as control_request messages to stdout, and awaits control_response replies.",
+        "dependencies": [
+          "entrypoints/sdk/controlTypes.ts",
+          "utils/permissions/PermissionResult.ts",
+          "utils/hooks.ts",
+          "cli/ndjsonSafeStringify.ts"
+        ]
+      },
+      {
+        "name": "RemoteIO",
+        "type": "class",
+        "file": "cli/remoteIO.ts",
+        "signature": "export class RemoteIO extends StructuredIO { private url: URL; private transport: Transport; ... }",
+        "purpose": "Extends StructuredIO for remote/bridge mode: connects to a CCR or SSE transport, streams SDK messages bidirectionally, and manages keep-alive timers.",
+        "dependencies": [
+          "cli/structuredIO.ts",
+          "cli/transports/ccrClient.ts",
+          "cli/transports/SSETransport.ts",
+          "utils/sessionState.ts"
+        ]
+      },
+      {
+        "name": "AssistantTextMessage",
+        "type": "function",
+        "file": "components/messages/AssistantTextMessage.tsx",
+        "signature": "export function AssistantTextMessage({ param: TextBlockParam, addMargin, shouldShowDot, verbose, width?, onOpenRateLimitOptions? }): ReactNode",
+        "purpose": "Renders an assistant text block: handles error conditions (invalid API key, rate limit, credit balance) and delegates to Markdown for normal content.",
+        "dependencies": [
+          "components/Markdown.tsx",
+          "components/MessageResponse.tsx",
+          "components/messages/RateLimitMessage.tsx",
+          "services/api/errors.ts"
+        ]
+      },
+      {
+        "name": "PromptInput",
+        "type": "function",
+        "file": "components/PromptInput/PromptInput.tsx",
+        "signature": "export function PromptInput({ ... }): ReactNode",
+        "purpose": "Primary user input component: manages multi-line text buffer, vim mode, history search, paste handling, command queue, IDE @ mentions, and agent swarm triggers.",
+        "dependencies": [
+          "ink.ts (Box, Text, useInput)",
+          "hooks/useInputBuffer.ts",
+          "hooks/useArrowKeyHistory.ts",
+          "hooks/useHistorySearch.ts",
+          "keybindings/useKeybinding.ts",
+          "state/AppState.ts"
+        ]
+      }
+    ],
+    "data_flows": [
+      {
+        "from": "Ink (ink.tsx)",
+        "to": "reconciler",
+        "via": "reconciler.updateContainer()",
+        "data": "React element tree updates triggered by state changes or scheduled renders"
+      },
+      {
+        "from": "reconciler",
+        "to": "DOMElement tree",
+        "via": "host config createInstance/appendChildNode/setAttribute",
+        "data": "React fiber mutations mapped to Ink DOM nodes with Yoga layout nodes attached"
+      },
+      {
+        "from": "DOMElement tree",
+        "to": "createRenderer (renderer.ts)",
+        "via": "node.yogaNode.calculateLayout() + renderNodeToOutput()",
+        "data": "Yoga-computed layout positions and node content written into Output buffer"
+      },
+      {
+        "from": "Output (output.ts)",
+        "to": "Screen buffer",
+        "via": "setCellAt / blitRegion",
+        "data": "ClusteredChar entries (value, width, styleId, hyperlink) written per-cell"
+      },
+      {
+        "from": "Screen (back buffer)",
+        "to": "LogUpdate (log-update.ts)",
+        "via": "diffEach over front/back screens",
+        "data": "Per-cell diffs emitted as Diff patch array (stdout ANSI, cursorMove, clear, style)"
+      },
+      {
+        "from": "LogUpdate",
+        "to": "optimize()",
+        "via": "function call",
+        "data": "Raw Diff array passed through single-pass merger/deduplicator"
+      },
+      {
+        "from": "optimize()",
+        "to": "writeDiffToTerminal (terminal.ts)",
+        "via": "function call",
+        "data": "Optimized Diff array serialized as ANSI escape sequences written to process.stdout"
+      },
+      {
+        "from": "stdin (raw bytes)",
+        "to": "App (ink/components/App.tsx)",
+        "via": "stdin 'data' event \u2192 parseMultipleKeypresses()",
+        "data": "ParsedKey / ParsedMouse objects"
+      },
+      {
+        "from": "App (ink/components/App.tsx)",
+        "to": "EventEmitter",
+        "via": "emitter.emit(InputEvent | TerminalFocusEvent)",
+        "data": "Parsed keystroke and focus events broadcast to all useInput subscribers"
+      },
+      {
+        "from": "useInput hook",
+        "to": "PromptInput component",
+        "via": "inputHandler callback",
+        "data": "Character input and key flags (arrows, ctrl, etc.) for text buffer manipulation"
+      },
+      {
+        "from": "PermissionRequest",
+        "to": "permissionComponentForTool()",
+        "via": "switch on tool identity",
+        "data": "Tool instance mapped to React.ComponentType<PermissionRequestProps>"
+      },
+      {
+        "from": "BashPermissionRequest (et al.)",
+        "to": "ToolUseConfirm.onAllow / onReject",
+        "via": "PermissionPrompt onSelect callback",
+        "data": "User decision (allow/deny/always-allow) with optional feedback string and PermissionUpdates"
+      },
+      {
+        "from": "StructuredIO",
+        "to": "stdout (NDJSON)",
+        "via": "writeToStdout + ndjsonSafeStringify",
+        "data": "control_request messages (tool permission prompts, elicitation requests) in SDK mode"
+      },
+      {
+        "from": "Messages.tsx",
+        "to": "VirtualMessageList",
+        "via": "props (renderableMessages, lookups)",
+        "data": "Pre-processed, collapsed, reordered message array for virtual rendering"
+      },
+      {
+        "from": "VirtualMessageList",
+        "to": "renderToScreen (render-to-screen.ts)",
+        "via": "incremental search path",
+        "data": "Single ReactElement rendered to isolated Screen for match position scanning"
+      },
+      {
+        "from": "ThemeProvider",
+        "to": "ThemeContext consumers",
+        "via": "React context",
+        "data": "Resolved ThemeName (dark/light) and setter callbacks"
+      }
+    ]
+  },
+  "interpretation": {
+    "patterns": [
+      {
+        "name": "Custom React Reconciler with Yoga Layout Backend",
+        "description": "Ink implements a full React host reconciler (react-reconciler) targeting a custom DOM tree (DOMElement) instead of the browser DOM. Layout is computed via a custom Yoga bindings layer (ink/layout/yoga.ts) rather than CSS. Each DOMElement carries a LayoutNode (Yoga node) reference, and the renderer calls calculateLayout() per frame to get computed positions before painting to the Screen buffer.",
+        "evidence": [
+          "ink/reconciler.ts:1-60",
+          "ink/dom.ts:1-70",
+          "ink/layout/engine.ts:1-6",
+          "ink/renderer.ts:30-90"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Double-Buffered Screen Diff Rendering",
+        "description": "Ink maintains two Screen instances (front buffer = previous frame, back buffer = current frame). After each React commit, the renderer writes the new frame into the back buffer, then LogUpdate diffs front vs. back at cell resolution to produce a minimal Diff patch array. The optimizer merges adjacent patches before serializing to ANSI. This is a classic double-buffering pattern adapted for terminal cells.",
+        "evidence": [
+          "ink/renderer.ts:40-55",
+          "ink/log-update.ts:1-55",
+          "ink/optimizer.ts:1-80",
+          "ink/screen.ts:1-60"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Switch-Dispatch Permission UI Architecture",
+        "description": "All tool permission dialogs share a single entry point (PermissionRequest) that dispatches to a per-tool component via a switch on tool identity (permissionComponentForTool). Every tool's UI component receives the same PermissionRequestProps interface with a setStickyFooter callback for fullscreen mode. Feature-flagged tools (ReviewArtifact, Workflow, Monitor) are dynamically required at runtime to enable dead-code elimination in production builds.",
+        "evidence": [
+          "components/permissions/PermissionRequest.tsx:47-82",
+          "components/permissions/PermissionRequest.tsx:83-127",
+          "components/permissions/BashPermissionRequest/BashPermissionRequest.tsx:71-80"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "OffscreenFreeze: Ref-Stability as a React Optimization",
+        "description": "OffscreenFreeze exploits a React reconciler property: returning the same ReactElement object reference causes the reconciler to bail out without re-rendering the subtree. When content scrolls above the visible viewport, OffscreenFreeze returns a cached ref from the last visible render, preventing timer-driven children (spinners, elapsed counters) from causing terminal resets on scrollback content. The component explicitly opts out of React Compiler memoization to preserve this mechanism.",
+        "evidence": [
+          "components/OffscreenFreeze.tsx:1-40",
+          "components/Messages.tsx:47-55"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "RawAnsi Bypass for Pre-Rendered Content",
+        "description": "For content already formatted as ANSI-escaped terminal output (e.g. syntax-highlighted diffs from a native NAPI module), RawAnsi skips the full React\u2192Yoga\u2192output roundtrip by emitting a single Yoga leaf with a constant measure function and injecting lines directly into output.write(). This avoids reparsing ANSI codes into React Text spans and re-emitting them.",
+        "evidence": [
+          "ink/components/RawAnsi.tsx:1-30"
+        ],
+        "confidence": "high",
+        "surprising": true
+      },
+      {
+        "name": "React Compiler (Forget) Applied Pervasively",
+        "description": "All compiled component files show the `import { c as _c } from 'react/compiler-runtime'` pattern with `_c(N)` memo caches at the top of each function body. This is the React Compiler (previously React Forget) output, generating granular per-expression memoization. Some components explicitly opt out (`'use no memo'`) where the optimization would be counterproductive (e.g., OffscreenFreeze's cached-ref mechanism).",
+        "evidence": [
+          "components/permissions/PermissionDialog.tsx:1-2",
+          "components/Message.tsx:1-2",
+          "components/OffscreenFreeze.tsx:28"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Dual Rendering Mode: Inline Scrollback vs. Fullscreen Alt Screen",
+        "description": "The codebase supports two distinct rendering modes gated by isFullscreenEnvEnabled(). In inline mode, content flows into terminal scrollback and LogUpdate does line-based diffing. In fullscreen mode, AlternateScreen activates DEC 1049 (alt screen buffer) with mouse tracking, FullscreenLayout constrains height to terminal rows, and VirtualMessageList provides virtualized rendering over ScrollBox. DECSTBM scroll optimization hints in Frame enable hardware-accelerated scrolling in fullscreen.",
+        "evidence": [
+          "ink/components/AlternateScreen.tsx:1-55",
+          "components/FullscreenLayout.tsx:1-65",
+          "components/VirtualMessageList.tsx:1-65",
+          "ink/frame.ts:12-20"
+        ],
+        "confidence": "high",
+        "surprising": false
+      },
+      {
+        "name": "Module-Level LRU Caches for Markdown and Search",
+        "description": "Markdown.tsx maintains a module-level 500-entry LRU token cache keyed by content hash to survive React component unmount/remount (useMemo would lose entries on virtual-list scroll). Similarly, renderToScreen shares module-level root/container/pool singletons across calls for char-cache persistence, and VirtualMessageList uses a WeakMap for search-text extraction. These module-level caches are the primary memory amortization strategy.",
+        "evidence": [
+          "components/Markdown.tsx:17-60",
+          "ink/render-to-screen.ts:37-58",
+          "components/VirtualMessageList.tsx:23-31"
+        ],
+        "confidence": "high",
+        "surprising": true
+      }
+    ]
+  },
+  "cross_references": [
+    {
+      "symbol": "PermissionRequest",
+      "referenced_in": [
+        "components/Messages.tsx",
+        "screens/REPL.tsx (likely)",
+        "components/FullscreenLayout.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "ToolUseConfirm",
+      "referenced_in": [
+        "components/permissions/hooks.ts",
+        "components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+        "components/permissions/FileEditPermissionRequest",
+        "components/permissions/FileWritePermissionRequest",
+        "components/Messages.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "ScrollBox / ScrollBoxHandle",
+      "referenced_in": [
+        "components/FullscreenLayout.tsx",
+        "components/VirtualMessageList.tsx",
+        "components/Messages.tsx",
+        "components/ExitFlow.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "PermissionDialog",
+      "referenced_in": [
+        "components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+        "components/permissions/FileEditPermissionRequest",
+        "components/permissions/FileWritePermissionRequest",
+        "components/permissions/WebFetchPermissionRequest"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "DOMElement",
+      "referenced_in": [
+        "ink/reconciler.ts",
+        "ink/renderer.ts",
+        "ink/output.ts",
+        "ink/render-node-to-output.ts",
+        "ink/render-to-screen.ts",
+        "ink/components/ScrollBox.tsx",
+        "ink/components/Box.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "Screen (ink/screen.ts)",
+      "referenced_in": [
+        "ink/output.ts",
+        "ink/renderer.ts",
+        "ink/log-update.ts",
+        "ink/frame.ts",
+        "ink/render-to-screen.ts",
+        "ink/selection.ts"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "Ink class (ink/ink.tsx)",
+      "referenced_in": [
+        "ink/instances.ts",
+        "ink/components/AlternateScreen.tsx",
+        "ink/components/App.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "AlternateScreen",
+      "referenced_in": [
+        "components/FullscreenLayout.tsx (indirect via isFullscreenEnvEnabled)",
+        "ink/ink.tsx (altScreenActive flag)"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "StructuredIO",
+      "referenced_in": [
+        "cli/remoteIO.ts",
+        "cli/print.ts"
+      ],
+      "relationship": "extends|imports"
+    },
+    {
+      "symbol": "OffscreenFreeze",
+      "referenced_in": [
+        "components/Messages.tsx",
+        "components/MessageRow.tsx"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "PermissionPrompt",
+      "referenced_in": [
+        "components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+        "components/permissions/FileEditPermissionRequest",
+        "components/permissions/FileWritePermissionRequest"
+      ],
+      "relationship": "imports"
+    },
+    {
+      "symbol": "ThemeProvider / ThemeContext",
+      "referenced_in": [
+        "components/design-system/ThemedText.tsx",
+        "components/design-system/ThemedBox.tsx",
+        "ink.ts (useTheme export)"
+      ],
+      "relationship": "imports"
+    }
+  ],
+  "surprises": [
+    "OffscreenFreeze uses React element reference identity as a reconciler bailout signal \u2014 returning the same object reference (not a memoized result) to prevent re-renders of scrolled-off content, and explicitly opts out of React Compiler memoization to preserve this trick.",
+    "RawAnsi provides a complete bypass of the React\u2192Yoga\u2192output pipeline for pre-rendered ANSI content, acting as a single constant-measure Yoga leaf that injects raw escape codes directly into the screen buffer.",
+    "The React Compiler (Forget) is applied to all UI components, visible as `import { c as _c } from 'react/compiler-runtime'` with fine-grained per-expression caching \u2014 this is production Forget output, not source.",
+    "Module-level LRU caches in Markdown.tsx survive React component unmounts (virtual list scrolling evicts fibers), which useMemo cannot, making cache longevity a deliberate architectural choice over React lifecycle.",
+    "renderToScreen maintains module-level singleton React root/container/pool state across calls using LegacyRoot (synchronous scheduling) specifically to prevent ConcurrentRoot's scheduler backlog from leaking across roots \u2014 a subtle React internals exploit.",
+    "PermissionRequest.tsx uses feature('REVIEW_ARTIFACT') with dynamic require() for conditional tool loading, enabling dead-code elimination of entire tool permission UIs in production builds via bun:bundle's feature flag mechanism.",
+    "BashPermissionRequest isolates a 20fps shimmer animation clock (ClassifierCheckingSubtitle) into a separate component specifically to prevent the shimmer's useShimmerAnimation timer from re-rendering the full 535-line permission dialog body every 50ms during AI classifier checks.",
+    "useInput (ink) uses useLayoutEffect instead of useEffect for raw mode setup so the terminal enters raw mode synchronously during React's commit phase \u2014 avoiding a cooked-mode tick where keystrokes would echo visibly.",
+    "The PermissionDialog uses borderLeft=false, borderRight=false, borderBottom=false \u2014 only the top border is drawn \u2014 creating a visual 'underline' style permission prompt rather than a box.",
+    "The ink Screen's CharPool uses an Int32Array fast-path for ASCII characters (code < 128) rather than a Map lookup, making the common case of ASCII text a direct array index read with zero Map overhead.",
+    "LogoHeader in Messages.tsx is React.memo'd specifically because it is the first sibling before all MessageRows \u2014 if it re-renders on every messages array change, it contaminates the prevScreen blit optimization for ALL subsequent siblings, causing 150K+ writes/frame in long sessions."
+  ]
+}

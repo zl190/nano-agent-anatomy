@@ -1,0 +1,22 @@
+Saved to `experiment/v1/reader-4-ui-terminal.md`. Here's what the analysis covers:
+
+---
+
+**Files analyzed:**
+- `ink/` — 10 files, ~9K lines of custom terminal renderer
+- `components/` — 389 files, 24K+ lines of React UI
+- `cli/` — 3 core files, ~6.7K lines of integration layer
+
+**Key architectural findings:**
+
+1. **Ink is a minimal React host config** — delegates reconciliation/scheduling to upstream React, implements only DOM creation, dirty tracking, and layout hooks. ~500 lines to bridge React to the terminal.
+
+2. **Dirty-flag cascade is the performance budget** — `markDirty` walks upward (O(depth)), stops at already-dirty ancestors. Clean siblings blit (copy screen region). Without this, 2800 messages redraw on every keypress.
+
+3. **Double-buffering + Uint32Array diff** — two Screen objects, cell-level comparison, ANSI emitted only for changed cells. DECSTBM hardware scroll saves 90% output bandwidth on pure-scroll frames.
+
+4. **`useLayoutEffect` vs `useEffect` for raw mode** — this is the single most production-quality detail: `useLayoutEffect` enables raw mode during React's commit phase (synchronous). `useEffect` defers to the next tick, leaving cooked mode briefly (keystrokes echo).
+
+5. **Permission cascade** — rules → saved decisions → user hooks → interactive prompt → mode default. Each level short-circuits. Reason attached to every decision.
+
+6. **Streaming content clock** — three separate timing strategies for streaming: parser debounce (Markdown), stickyScroll (virtual list), adaptive drain (native vs xterm.js).

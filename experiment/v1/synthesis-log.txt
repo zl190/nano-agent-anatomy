@@ -1,0 +1,12 @@
+Synthesis written to `experiment/v1/synthesis-v1.md`.
+
+**Summary of findings across 6 reports (~35K words of analysis):**
+
+**15 cross-cutting patterns** identified, led by the layered permission model (5/6 reports), discriminated unions (5/6), and security-at-every-boundary (4/6).
+
+**Architecture in a nutshell:** Single-process terminal app with async-generator tool loop, two separate state systems (34-line pub/sub store for React, process-global singleton for everything else), 15-method tool interface where every tool is also its own renderer, 4-path agent spawn hierarchy where skills are agents in disguise, and a memory system where per-turn relevance selection is itself a 256-token LLM call.
+
+**Top 3 surprises:**
+1. **Security-to-execution ratio is 4:1** — BashTool has ~8,500 lines of security vs ~1,100 lines of execution logic
+2. **`sed -i` is intercepted and simulated** — the model thinks it's running sed, but the approved diff is applied directly, with the simulation field stripped from the model-facing schema
+3. **The terminal renderer is a game engine** — double buffering, Uint32Array cell diff, bit-packed style pools, DECSTBM hardware scroll, dirty-flag cascading, Yoga WASM node pooling with 5-min GC

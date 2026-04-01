@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__xiaohongshu-mcp__publish_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "publish/gates/pre-publish.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "publish/gates/pre-push.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "publish/gates/post-write-reminder.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

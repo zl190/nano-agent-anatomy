@@ -1,0 +1,24 @@
+Analysis saved to `experiment/v1/reader-6-commands-skills.md`. Here's the summary of what was found:
+
+---
+
+**commands/** (~26,400 lines, ~150 files)
+
+Key architectural findings:
+- `/compact` has a 3-path decision tree (session-memory → reactive → traditional). Before summarizing, it strips UI-only "snipped" messages — the REPL keeps them for scrollback but the model must never see intentionally removed content.
+- `/plan` is a **mode toggle** (`toolPermissionContext.mode = 'plan'`), not a wizard. The plan lives on disk as a file.
+- `/init` is a 7-phase interview pipeline: survey subagent (foreground, results needed) → gap-fill → write artifacts. Phase 1's scope choice is a **hard filter** — if user said no hooks, no hooks appear in later phases.
+- `createMovedToPluginCommand.ts` is a migration shim: internal users get "install the plugin," external users get a fallback prompt.
+
+**skills/** (~4,066 lines)
+
+- Skills are `Command` objects with 15+ fields: permission scope, model override, path filters, hooks, `context: 'fork'` (isolated sub-agent), lazy content loading.
+- `files` field extracts reference docs to disk on first invocation with hardened security (O_NOFOLLOW|O_EXCL, 0o600, symlink guards). The extraction promise is memoized — concurrent callers await the same promise.
+- MCP skills are second-class: no inline shell execution, `${CLAUDE_SKILL_DIR}` is meaningless. Trust boundary: `loadedFrom !== 'mcp'`.
+- `/batch` embeds a mandatory worker output contract: `PR: <url>` — background agent output as structured data, not prose.
+- `/update-config` includes a 6-step hook verification SOP: construct → pipe-test with synthesized stdin → write JSON → validate with `jq -e` → prove it fires in-turn.
+- `/skillify` reads `getSessionMemoryContent()` + user messages to capture a session as a reusable skill.
+
+**plugins/** — Three-way distinction: bundled (always-on, invisible) vs builtin (user-toggleable in /plugin UI) vs marketplace plugin. The `plugins/bundled/index.ts` is currently empty scaffolding.
+
+**utils/bash/specs/** — Structured `CommandSpec` objects for bash commands (pyright, timeout, srun, etc.). `isCommand: true` enables recursive autocomplete for wrapper commands. SLURM (`srun`) is explicitly supported.
