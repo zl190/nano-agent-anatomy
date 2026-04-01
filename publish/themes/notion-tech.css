@@ -1,0 +1,308 @@
+/* ============================================
+   Notion-Tech — Clean + Code-friendly
+   Merges notion's minimal white aesthetic with
+   tech-style code blocks and accent colors.
+
+   Design sources:
+   - Top XHS posts: white bg, large serif titles,
+     syntax-highlighted code, pastel accents
+   - LobeHub "notion" style: clean lines, minimalist
+   - LobeHub "tech" style: code block emphasis
+   - RedInk consistency: all colors as CSS variables
+   ============================================ */
+
+/* ── CSS Custom Properties (RedInk pattern) ── */
+:root {
+  --bg-card: #FFFFFF;
+  --bg-page: #F0F0F0;
+  --bg-code: #F5F5F5;
+  --bg-blockquote: #F8FAFC;
+  --bg-tag: #EEF2FF;
+
+  --text-primary: #1A1A2E;
+  --text-body: #374151;
+  --text-secondary: #6B7280;
+  --text-code: #1F2937;
+
+  --accent: #2563EB;         /* blue-600 — primary accent */
+  --accent-light: #EFF6FF;   /* blue-50 */
+  --accent-medium: #3B82F6;  /* blue-500 */
+  --accent-strong: #1E40AF;  /* blue-800 */
+
+  --border-light: #E5E7EB;
+  --border-accent: #2563EB;
+
+  --font-sans: 'Noto Sans SC', 'PingFang SC', 'SF Pro Display', -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* ── Card chrome ── */
+.card-inner {
+  background-color: var(--bg-card);
+}
+
+.card-content {
+  color: #374151;
+  font-family: var(--font-sans);
+  font-size: 42px;
+  line-height: 1.8;
+}
+
+/* ── Headings ── */
+.card-content h1 {
+  font-size: 76px;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  padding-left: 24px;
+  line-height: 1.3;
+  border-left: 6px solid var(--accent);
+  border-bottom: none;
+  letter-spacing: -0.02em;
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 700;
+  color: #2563EB;
+  margin: 48px 0 24px 0;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.card-content h3 {
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 40px 0 20px 0;
+  padding-left: 20px;
+  border-left: 4px solid var(--accent-medium);
+}
+
+/* ── Paragraphs ── */
+.card-content p {
+  margin-bottom: 32px;
+  color: var(--text-body);
+}
+
+/* ── Bold text — blue-tinted ── */
+.card-content strong,
+.card-content b {
+  font-weight: 700;
+  color: #1E40AF;
+}
+
+/* ── Italic ── */
+.card-content em,
+.card-content i {
+  font-style: italic;
+  color: var(--accent);
+}
+
+/* ── Links ── */
+.card-content a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 2px solid var(--accent-medium);
+}
+
+/* ── Lists — clean with colored markers ── */
+.card-content ul,
+.card-content ol {
+  margin: 28px 0;
+  padding-left: 56px;
+}
+
+.card-content li {
+  margin-bottom: 20px;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+.card-content li::marker {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── Blockquotes — left border accent, light bg ── */
+.card-content blockquote {
+  margin: 36px 0;
+  padding: 28px 36px;
+  background-color: #EFF6FF;
+  color: var(--text-body);
+  border-left: 4px solid #3B82F6;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-style: italic;
+}
+
+.card-content blockquote p {
+  margin: 0;
+  color: inherit;
+}
+
+/* ── Inline code — red-tinted for visibility ── */
+.card-content code {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  background-color: #F3F4F6;
+  color: #DC2626;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+
+/* ── Code blocks — light bg, dark text, syntax highlighting ── */
+.card-content pre {
+  margin: 36px 0;
+  padding: 36px;
+  background-color: var(--bg-code);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow-x: visible;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.card-content pre code {
+  background-color: transparent;
+  border: none;
+  color: var(--text-code);
+  padding: 0;
+  font-size: 34px;
+  line-height: 1.6;
+}
+
+/* ── Pygments syntax highlighting (light theme) ── */
+.card-content .codehilite .hll { background-color: #ffffcc }
+.card-content .codehilite .c  { color: #6B7280; font-style: italic } /* Comment */
+.card-content .codehilite .k  { color: #7C3AED; font-weight: bold } /* Keyword */
+.card-content .codehilite .o  { color: #374151 } /* Operator */
+.card-content .codehilite .p  { color: #374151 } /* Punctuation */
+.card-content .codehilite .cm { color: #6B7280; font-style: italic } /* Comment.Multiline */
+.card-content .codehilite .cp { color: #6B7280; font-style: italic } /* Comment.Preproc */
+.card-content .codehilite .c1 { color: #6B7280; font-style: italic } /* Comment.Single */
+.card-content .codehilite .cs { color: #6B7280; font-style: italic } /* Comment.Special */
+.card-content .codehilite .gd { color: #DC2626 } /* Generic.Deleted */
+.card-content .codehilite .gi { color: #059669 } /* Generic.Inserted */
+.card-content .codehilite .gr { color: #DC2626 } /* Generic.Error */
+.card-content .codehilite .gh { color: #1A1A2E; font-weight: bold } /* Generic.Heading */
+.card-content .codehilite .go { color: #6B7280 } /* Generic.Output */
+.card-content .codehilite .gs { font-weight: bold } /* Generic.Strong */
+.card-content .codehilite .gu { color: #4F46E5; font-weight: bold } /* Generic.Subheading */
+.card-content .codehilite .kc { color: #7C3AED; font-weight: bold } /* Keyword.Constant */
+.card-content .codehilite .kd { color: #7C3AED; font-weight: bold } /* Keyword.Declaration */
+.card-content .codehilite .kn { color: #7C3AED; font-weight: bold } /* Keyword.Namespace */
+.card-content .codehilite .kp { color: #7C3AED } /* Keyword.Pseudo */
+.card-content .codehilite .kr { color: #7C3AED; font-weight: bold } /* Keyword.Reserved */
+.card-content .codehilite .kt { color: #2563EB } /* Keyword.Type */
+.card-content .codehilite .m  { color: #D97706 } /* Literal.Number */
+.card-content .codehilite .s  { color: #059669 } /* Literal.String */
+.card-content .codehilite .na { color: #2563EB } /* Name.Attribute */
+.card-content .codehilite .nb { color: #2563EB } /* Name.Builtin */
+.card-content .codehilite .nc { color: #2563EB; font-weight: bold } /* Name.Class */
+.card-content .codehilite .nd { color: #7C3AED } /* Name.Decorator */
+.card-content .codehilite .ni { color: #374151; font-weight: bold } /* Name.Entity */
+.card-content .codehilite .ne { color: #DC2626; font-weight: bold } /* Name.Exception */
+.card-content .codehilite .nf { color: #2563EB } /* Name.Function */
+.card-content .codehilite .nl { color: #374151; font-weight: bold } /* Name.Label */
+.card-content .codehilite .nn { color: #2563EB; font-weight: bold } /* Name.Namespace */
+.card-content .codehilite .nt { color: #7C3AED; font-weight: bold } /* Name.Tag */
+.card-content .codehilite .nv { color: #374151 } /* Name.Variable */
+.card-content .codehilite .ow { color: #7C3AED; font-weight: bold } /* Operator.Word */
+.card-content .codehilite .w  { color: #BBBBBB } /* Text.Whitespace */
+.card-content .codehilite .mb { color: #D97706 } /* Literal.Number.Bin */
+.card-content .codehilite .mf { color: #D97706 } /* Literal.Number.Float */
+.card-content .codehilite .mh { color: #D97706 } /* Literal.Number.Hex */
+.card-content .codehilite .mi { color: #D97706 } /* Literal.Number.Integer */
+.card-content .codehilite .mo { color: #D97706 } /* Literal.Number.Oct */
+.card-content .codehilite .sa { color: #059669 } /* Literal.String.Affix */
+.card-content .codehilite .sb { color: #059669 } /* Literal.String.Backtick */
+.card-content .codehilite .sc { color: #059669 } /* Literal.String.Char */
+.card-content .codehilite .dl { color: #059669 } /* Literal.String.Delimiter */
+.card-content .codehilite .sd { color: #059669; font-style: italic } /* Literal.String.Doc */
+.card-content .codehilite .s2 { color: #059669 } /* Literal.String.Double */
+.card-content .codehilite .se { color: #D97706 } /* Literal.String.Escape */
+.card-content .codehilite .sh { color: #059669 } /* Literal.String.Heredoc */
+.card-content .codehilite .si { color: #D97706 } /* Literal.String.Interpol */
+.card-content .codehilite .sx { color: #059669 } /* Literal.String.Other */
+.card-content .codehilite .sr { color: #D97706 } /* Literal.String.Regex */
+.card-content .codehilite .s1 { color: #059669 } /* Literal.String.Single */
+.card-content .codehilite .ss { color: #059669 } /* Literal.String.Symbol */
+.card-content .codehilite .il { color: #D97706 } /* Literal.Number.Integer.Long */
+
+/* ── Horizontal rule ── */
+.card-content hr {
+  margin: 48px 0;
+  border: none;
+  height: 1px;
+  background-color: var(--border-light);
+}
+
+/* ── Images ── */
+.card-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin: 36px auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Tables ── */
+.card-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 36px 0;
+  font-size: 38px;
+}
+
+.card-content th {
+  background-color: var(--accent-light);
+  color: var(--accent-strong);
+  font-weight: 700;
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 2px solid var(--accent);
+}
+
+.card-content td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-body);
+}
+
+.card-content tr:hover td {
+  background-color: #FAFAFA;
+}
+
+/* ── Tags — colored pills ── */
+.tags-container {
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border-light);
+}
+
+.tag {
+  display: inline-block;
+  background-color: #2563EB;
+  color: #FFFFFF;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-size: 32px;
+  margin: 8px 12px 8px 0;
+  font-weight: 600;
+}
+
+/* ── Page number — subtle at bottom ── */
+.page-number {
+  color: var(--text-secondary) !important;
+  font-size: 32px !important;
+  opacity: 0.6;
+}
