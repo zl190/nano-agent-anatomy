@@ -4,7 +4,7 @@
 Agent Anatomy: Dissecting Production AI Agents
 
 ## Price
-$10 (one-time)
+$19 (one-time)
 
 ## Short Description
 What 513K lines of leaked source code taught me about building AI agents. 4 layers, 6 weeks, ~500 lines of Python that teach more than any framework tutorial.
@@ -17,11 +17,11 @@ I'm reading through every layer, cross-referencing with Berkeley's CS294 Agentic
 
 **What you get:**
 
-- 4 learning notes — what I found in the source, what it means, what the Berkeley lectures add
-- 4 Python files (~500 lines total) — each implements one production pattern, annotated
-- Study roadmap — exact files to read, exact questions to answer, comprehension checks
-- Architecture map — how all 4 layers connect
-- Experiment data — blind A/B comparing reading methodologies, with full scores
+- 14 learning notes (~2,800 lines) — what I found in the source, what it means, what the Berkeley lectures add, and a full 5-source cross-validation audit
+- 5 exercises — comprehension checks that force you to trace code with concrete values
+- Blind experiment report — free-form vs. structured-schema reading, with full scores (6-1 result)
+- Unified claims model — 9 verified claims with evidence chains and coverage matrix
+- Gap analysis — what production does that our 150-line version skips, per layer
 
 **The 4 layers:**
 
@@ -41,13 +41,13 @@ I'm reading through every layer, cross-referencing with Berkeley's CS294 Agentic
 - If you want a framework to pip install, this isn't it
 - If you want a Claude Code clone, use claw-code instead
 
-**Format:** PDF + source code (.zip)
+**Format:** ZIP (Markdown files, ready to read alongside the open-source repo)
 
 ---
 
 ## Pricing Note
 
-Set as $10 one-time. Can offer $0+ (pay what you want) for the first week to build audience, then set floor at $10.
+$19 one-time. 热点窗口 prioritizes conversion velocity — lower friction, faster capture.
 
 ## Cover Image Idea
 
