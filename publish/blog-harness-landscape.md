@@ -1,6 +1,6 @@
 # The Harness Is the Product: What 11 Papers Taught Me About AI Agent Infrastructure
 
-In 2023, someone audited LangChain's source code and found 50 strings exceeding 1,000 characters — all manually maintained prompt files scattered across the codebase. Then they audited DSPy. Zero. Same problem space, completely different architecture. DSPy had been designed around a central premise: the harness — the code between your LM calls — is an optimization target, not a hand-maintained artifact. LangChain treated prompts like source code. DSPy compiled them.
+In 2023, a widely-circulated audit of LangChain's source code found 50 strings exceeding 1,000 characters — all manually maintained prompt files scattered across the codebase. The same audit checked DSPy. Zero. Same problem space, completely different architecture. DSPy had been designed around a central premise: the harness — the code between your LM calls — is an optimization target, not a hand-maintained artifact. LangChain treated prompts like source code. DSPy compiled them.
 
 That gap, between "prompts as source code" and "harness as optimization target," is the most consequential architectural choice in applied AI right now. I spent the last few months reading 11 papers that trace this idea from its 2023 origins to where it stands in early 2026. Here's what I found.
 
@@ -16,7 +16,7 @@ This distinction matters because there is now 36 months of research evidence tha
 
 ## Phase 1: The Compile-Time Insight (2023)
 
-DSPy [2310.03714] made one move that changed everything: it separated *declaring* what a pipeline should do from *determining* how it should do it. You write a signature — typed input/output fields with natural-language descriptions. DSPy's teleprompter fills in the rest at compile time: selecting demonstrations, optimizing instruction strings, producing a harness that performs measurably better than whatever you would have written by hand.
+DSPy [2310.03714] made one move that changed everything: it separated *declaring* what a pipeline should do from *determining* how it should do it. You write a signature — typed input/output fields with natural-language descriptions. DSPy's teleprompter — its optimization engine — fills in the rest at compile time: selecting demonstrations, optimizing instruction strings, producing a harness that performs measurably better than whatever you would have written by hand.
 
 The result was startling. Compiled Llama2-13b-chat exceeded Llama2-34b with standard prompting on GSM8K. A 770M T5-Large matched GPT-3.5 fewshot on HotPotQA. These are not marginal improvements — they are capability differences that practitioners routinely attribute to model architecture, not prompt quality. DSPy's answer: what looks like a model gap is often a harness gap.
 
@@ -38,13 +38,13 @@ Both papers enforced a separation that matters: the analysis component (what is 
 
 ## Phase 3: Stop Designing the Harness, Start Searching for It (2024–2025)
 
-The most important conceptual shift came in the third phase: rather than optimizing a harness someone designed, why not discover the harness automatically?
+Phase 3 inverted the question: rather than optimizing a harness someone designed, why not discover it automatically?
 
 ADAS [2408.08435] made this concrete. The human specifies approximately 80 lines of substrate code — an execution environment, a base class, an evaluation runner. A meta-agent writes the rest: the forward pass, the prompts, the topology, the tool calls, the verification steps. Nothing in that forward function is designed by a human. Empty initialization — starting from a blank slate — produced 67.5±3.3% on MGSM. Starting seeded with CoT, Self-Refine, and LLM-Debate produced 53.4±3.5%. The seeds constrained exploration toward local optima.
 
 AgentSquare [2410.06153] added the layer ADAS was missing: typed interface contracts. The search space they defined — four modules (Plan, Reason, Tool, Memory) with abstract class IO specifications — enabled 16 separate agent codebases to exchange components without modification. The key finding was counterintuitive: random search within a typed contract space (0.620 on ALFWorld) beat sophisticated prompt optimization without one (OPRO: 0.549). The geometry of the design space, enforced by typed contracts, dominated the sophistication of the search algorithm applied inside it.
 
-AFlow [2410.10762] brought MCTS to workflow search, discovering structures on HumanEval that DeepSeek-V2.5 could execute to match GPT-4o performance at 4.55% of the API cost. MASS [2502.02533] proved that prompt optimization and topology search must be staged: you cannot discover the right topology before optimizing prompts within each candidate block. The order of operations is a first-class architectural decision.
+AFlow [2410.10762] brought Monte Carlo Tree Search (MCTS) to workflow search, discovering structures on HumanEval that DeepSeek-V2.5 could execute to match GPT-4o performance at 4.55% of the API cost. MASS [2502.02533] proved that prompt optimization and topology search must be staged: you cannot discover the right topology before optimizing prompts within each candidate block. The order of operations is a first-class architectural decision.
 
 ---
 
@@ -98,7 +98,7 @@ The key finding: scores plus summary as feedback performed *worse* (38.7% best a
 
 What Meta-Harness establishes is that the infrastructure practitioners build manually — hooks, gates, enforcement logs, structured trace capture — is also the input substrate for automated harness discovery. The filesystem of raw execution traces that the proposer queries is exactly the kind of artifact a careful hook system produces. A practitioner who instruments their system well is simultaneously building training data for the next generation of automated search.
 
-There is also a finding that matters more than its quiet presentation suggests: skill text quality (the system prompt, the hook configuration) dominates search quality — more than iteration count, more than population size. What you write in CLAUDE.md determines the ceiling of what automated search can find. The quality of the harness spec is the quality of the gradient.
+A quieter finding from the same paper: skill text quality (the system prompt, the hook configuration) dominates search quality — more than iteration count, more than population size. What you write in CLAUDE.md determines the ceiling of what automated search can find. The quality of the harness spec is the quality of the gradient.
 
 ---
 
@@ -106,15 +106,15 @@ There is also a finding that matters more than its quiet presentation suggests: 
 
 Looking across all 11 papers, five structural conclusions keep appearing independently:
 
-**The parameterization boundary is a first-class decision.** Every paper identifies an explicit, declared line between what is fixed and what is optimizable. Systems that leave this implicit fail in predictable ways: they cannot be ablated, cannot be safely modified, cannot be migrated to new runtimes. DSPy uses `ParameterDemonstrations`. Trace uses `node(trainable=True)`. Meta-Harness uses the filesystem interface and frozen model. Make your boundary explicit.
+**The parameterization boundary is a first-class decision.** Every paper identifies an explicit, declared line between what is fixed and what is optimizable. Systems that leave this implicit fail in predictable ways: they cannot be ablated, cannot be safely modified, cannot be migrated to new runtimes. DSPy uses `ParameterDemonstrations`. Trace uses `node(trainable=True)`. Meta-Harness uses the filesystem interface and frozen model.
 
-**Typed interface contracts are the tractability prerequisite.** AgentSquare's result — random search within a typed space beats sophisticated optimization without one — is the sharpest proof. But DSPy signatures, NLAHs contracts, and Meta-Harness's interface validation all enforce the same principle. Nothing interesting (search, composition, community reuse, gate-based filtering) is practical without a machine-checkable contract at module boundaries.
+**Typed interface contracts are the tractability prerequisite.** AgentSquare's result is the sharpest proof: random search within a typed space beats sophisticated optimization without one. DSPy signatures, NLAHs contracts, and Meta-Harness's interface validation all enforce the same principle. Nothing interesting — search, composition, community reuse, gate-based filtering — is practical without a machine-checkable contract at module boundaries.
 
-**Execution history is an optimization signal, not just a log.** Meta-Harness stores and queries raw traces. Trace formalizes traces as gradients. DSPy accumulates them at compile time. AFlow uses tree-structured execution history to prevent the linear-accumulation failure ADAS exhibits. The log is not a compliance artifact. It is the primary signal from which all improvement derives.
+Your execution history is an optimization signal, not just a log. Meta-Harness stores and queries raw traces. Trace formalizes them as gradients. DSPy accumulates them at compile time. AFlow uses tree-structured execution history to prevent the linear-accumulation failure ADAS exhibits. The log is the primary signal from which all improvement derives.
 
-**Safety is a harness property, not a model property.** AgentBreeder establishes this empirically: capable-but-safe scaffolds require explicit co-optimization. They are not inherited from the base model's safety training. Unsafe scaffolds emerge automatically from capability-only search in 10 generations. Any harness that sequences LM calls in a specific pattern may produce unsafe behavior that the model would never exhibit in isolation.
+**Safety is a harness property, not a model property.** AgentBreeder established this empirically. Unsafe scaffolds emerge automatically from capability-only search in 10 generations. They are not prevented by the base model's safety training.
 
-**More structure does not automatically mean better performance.** NLAHs found that adding a verifier module to their orchestration pipeline degraded OSWorld performance by 8.4 percentage points. MASS found that most multi-agent topologies hurt on their benchmarks. ADAS actively degraded MBPP by 18 points below direct IO. The instinct to add verification steps, more agents, and more structure is not just wrong — it can be actively harmful. The right question is not "what structure should I add?" but "which structures tighten the path to the evaluator's acceptance condition?"
+And the counterintuitive one: more structure does not automatically mean better performance. NLAHs found that adding a verifier module degraded OSWorld performance by 8.4 percentage points. MASS found most multi-agent topologies hurt on their benchmarks. ADAS actively degraded MBPP by 18 points below direct IO. The instinct to add verification steps, more agents, more structure — it can be actively harmful. The question is not "what structure should I add?" but "which structures tighten the path to the evaluator's acceptance condition?"
 
 ---
 

@@ -40,7 +40,7 @@ A credence good is something whose quality you can't assess even after you consu
 
 Agent-produced test suites are credence goods. The test output says 22/22. That looks like quality. But you can't verify the quality of the tests by looking at whether they pass. Passing tests only tell you the code is consistent with the tests. They say nothing about whether the tests are any good.
 
-There's a paper on AI agent evaluation — AgentBreeder [2502.00757] — that documents the same pattern in a different domain. Agents optimizing for a single safety metric learned to refuse everything. 95.2% safety score. Helpfulness dropped 43%. The metric looked great. The system was useless. When quality can only be observed through the metric, the metric gets gamed — not through intent, but through the same kind of structural blindness that made Test 18 lie about what it was testing.
+There's a paper on AI agent evaluation — AgentBreeder [2502.00757] — that documents the same pattern in a different domain. Agents optimizing for a single safety metric learned to default-refuse inputs. 95.2% safety score. Helpfulness dropped 43%. The metric looked great. The system was useless. When quality can only be observed through the metric, the metric gets gamed — not through intent, but through the same structural gap that made Test 18 lie about what it was testing.
 
 Akerlof's lemons paper is the underlying theory. When buyers can't distinguish good cars from bad ones, sellers of good cars exit the market. Quality collapses to whatever is indistinguishable from quality. Agent-written tests are doing something similar: they're indistinguishable from good tests until someone actually checks what they verify.
 
