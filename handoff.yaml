@@ -1,270 +1,290 @@
+# handoff.yaml — v2.3
 version: 2
 meta:
   project: "nano-agent-anatomy"
-  session: 11
-  timestamp: "2026-04-02T18:30:00+1100"
+  session: 22
+  timestamp: "2026-04-03T11:55:00-04:00"
   trigger: user
-  context_pct: 85
-  model: "Opus 4.6 (1M context)"
+  context_pct: 25
+  model: "claude-opus-4-6"
+
+# === SESSION PROFILE ===
+
+session_profile:
+  backlog_start:
+    p0: 1
+    p1: 8
+    p2: 7
+    total: 16
+  backlog_end:
+    p0: 2
+    p1: 7
+    p2: 8
+    total: 17
+  tasks_completed: 6
+  tasks_added: 5
+  depth_width: "wide"
+  directories_touched: 4
+  delegation_count: 3
+  delegation_bg_ratio: 0.67
+  user_interrupts: 0
+  session_duration_est: "~20 min"
+  prior_handoff_quality: 4.3
+
+# === HOT TIER ===
 
 current_task: null
 
-active_blockers:
-  - what: "Reddit r/ClaudeAI post awaiting mod approval"
-    owner: external
-    action: "Wait for mod approval. If rejected, repost with different flair or in r/artificial"
-    since: 2026-04-02
-  - what: "HN account needs karma before Show HN"
-    owner: user
-    action: "Comment on HN posts to build karma over a few days, then post Show HN"
-    since: 2026-04-02
-  - what: "4 blog posts need format gate (have content QC but not publish pipeline gate)"
-    owner: agent
-    action: "Run pre-publish gates on blog-context-degradation, blog-context-pollution, blog-credence-good-berkeley, blog-curriculum-gap"
-    since: 2026-04-02
+active_blockers: []
+
+# === WARM TIER ===
 
 key_concepts:
-  - "enforcement vs evaluation: CC has 3 layers for safety (enforcement), zero for quality (evaluation). This is the corrected framing — not 'safety>>quality'"
-  - "pre-package gate: automated script checking markers, paths, references, counts, stale labels before zip"
-  - "preview file = 2x scrutiny: free sample is the most important file in a paid product"
-  - "Gumroad product is 'Agent Anatomy' at yclab.gumroad.com, $19, 20 markdown files"
-  - "launch strategy: repo is top of funnel (free), paid package is backend. HN/Reddit drive to repo, repo README links to Gumroad"
+  - "paper-reading SKILL.md: DEPTH parameter now drives model selection (quick→haiku, standard→sonnet, deep→opus)"
+  - "publish-xhs gates now script-backed: [[ -s ]] for files, find+wc for PNGs. Step 7 fix re-runs Steps 4+5."
+  - "Pipeline spec exit codes: 0=PASS, 1=REVISE, 2=REJECT. Escalate = model upgrade only, never step-reroute."
+  - "Pipeline spec verdicts: unified PASS/REVISE/REJECT (3-state, not 2). Agent gates map: PASS→0, REVISE→1, REJECT→2."
+  - "Both blog drafts need dual QC (mechanical + persona) before publishing — not yet done."
 
 corrections:
-  - previous: "CC源码分析claim: '安全>>质量, Anthropic不管质量'"
-    corrected_to: "CC应用层有enforcement（安全），没有evaluation（质量）。质量投入在模型训练层，不在wrapper层。这是两件不同的事。"
-    evidence: "分析后发现：RLHF/constitutional AI是质量投入，CC hooks系统是quality基础设施。原claim有逻辑跳跃。"
-    session: 11
-  - previous: "05-local-router.md是项目早期规划后来没写完"
-    corrected_to: "文件是打包agent hallucinate出来的。CC源码里没有local router概念。git log显示从未在主repo的notes/出现。"
-    evidence: "git log --all -- '**/*local-router*' only shows gumroad-package commit. CC model selection is per-agent override, not routing."
-    session: 11
-  - previous: "max_turns=25, max_budget_tokens=0 in claw-code"
-    corrected_to: "max_turns=8, max_budget_tokens=2000. Also 'compile-time constant' is false — configurable via with_max_iterations() builder method."
-    evidence: "grep -n in claw-code/src/query_engine.py and conversation.rs"
-    session: 11
-  - previous: "conversation.rs is 585 lines, 350+ tests in claw-code"
-    corrected_to: "584 lines (wc -l verified). 188 #[test] markers (grep -rc verified)."
-    evidence: "Direct source verification"
-    session: 11
+  - previous: "Pipeline-orchestration-spec needs 7 REVISE fixes"
+    corrected_to: "Actually 9 issues identified and all fixed"
+    evidence: "Explorer agent found 9 specific issues, all addressed in single commit"
+    session: 22
+  - previous: "22/22 noGlaze tests = system works"
+    corrected_to: "Tests avoid critical paths — FLAGGED blocking untested"
+    evidence: "Independent opus auditor: Test 18 tests PASS while claiming BLOCK"
+    session: 21
+  - previous: "delegation.jsonl is valid JSONL"
+    corrected_to: "100% corrupted — jq -n writes multi-line JSON"
+    evidence: "Auditor verified every entry spans 8 lines"
+    session: 21
+  - previous: "Agent self-reported quality is reliable"
+    corrected_to: "Agent outputs are credence goods — verify independently"
+    evidence: "22/22 masked 100% non-functional FLAGGED detection"
+    session: 21
 
 user_decisions_verbatim:
-  - quote: "别管科技博主了, 我们准确接小红书的地气再有点自己的特点就行了"
-    context: "XHS voice direction — accurate + grounded + personal, not tech influencer"
-    session: 11
-  - quote: "pua 你是p8, 你定方案"
-    context: "Delegated all product decisions — quality, pricing, launch strategy"
-    session: 11
-  - quote: "I've been reading all 513K lines — 这句删了可以吗, 没人信你一天把513k lines 全看了"
-    context: "Credibility check on Twitter thread hook. Changed to factual '512K lines across 1,892 files'"
-    session: 11
+  - quote: "read session21-brief.md then execute next steps"
+    context: "User delegated full execution of session 21 backlog P0+P1 tasks"
+    session: 22
 
 decisions:
   verified:
-    - claim: "Gumroad product name is 'Agent Anatomy', URL slug 'agent-internals', price $19"
-      evidence: "Product published live on Gumroad, user confirmed"
-      session: 11
-    - claim: "Blog Buy Me a Coffee link at buymeacoffee.com/ylab3, icon in left sidebar"
-      evidence: "SocialLinks component created, pushed to blog repo, deployed"
-      session: 11
-    - claim: "Cloudflare Web Analytics on ylab3.com — automatic setup, no code needed"
-      evidence: "User showed Cloudflare dashboard with automatic setup enabled"
-      session: 11
-    - claim: "cc-fuel-gauge pushed to GitHub with sensor-actuator handoff split"
-      evidence: "git push confirmed, fcf639e on origin/main"
-      session: 11
-    - claim: "Twitter thread posted (6 tweets) from @yclab3"
-      evidence: "Browser automation confirmed, visible on timeline"
-      session: 11
-    - claim: "Reddit r/ClaudeAI post submitted with 'Code Leak Megathread' flair"
-      evidence: "User showed 'awaiting moderator approval' status"
-      session: 11
-    - claim: "XHS v5 content: enforcement/evaluation framing replaces safety>>quality"
-      evidence: "User approved the corrected framing after discussion"
-      session: 11
-    - claim: "Gumroad package passed 2 rounds of independent QC (Opus reviewer)"
-      evidence: "QC pass 1: 6 blocking issues fixed. QC pass 2: 14 issues fixed including factual errors."
-      session: 11
-    - claim: "3 new hooks registered in settings.json: pre-package-gate, publish-gate, preview-scrutiny"
-      evidence: "settings.json edited and validated"
-      session: 11
-    - claim: "7 failure patterns documented in feedback_product-launch-retro.md"
-      evidence: "Memory file written with rules + evidence + application guidance"
-      session: 11
+    - claim: "settings.json symlinked: ~/dotfiles/claude/settings.json → ~/.claude/settings.json"
+      evidence: "ln -sf created, ls -la confirmed symlink, backup at .bak"
+      session: 22
+    - claim: "paper-reading SKILL.md fixed: budget formula N×$1.60+$2.00, DEPTH-based model selection"
+      evidence: "Steps 2-4 now use conditional model selection, budget cap updated"
+      session: 22
+    - claim: "publish-xhs SKILL.md fixed: script-backed gates, Step 7→Steps 4+5, retry limits"
+      evidence: "Gates have inline script checks, gate summary table updated with enforcement column"
+      session: 22
+    - claim: "pipeline-orchestration-spec: 9 audit issues resolved"
+      evidence: "Committed 65023c0, pushed, 43/43 hook tests pass"
+      session: 22
+    - claim: "Harness landscape blog draft complete: 2700 words, 11 papers cited"
+      evidence: "publish/blog-harness-landscape.md exists, all arxiv IDs present"
+      session: 22
+    - claim: "'22/22 is a lie' blog draft complete: 1050 words"
+      evidence: "publish/blog-2222-is-a-lie.md exists, credence good angle with AgentBreeder citation"
+      session: 22
+    - claim: "Dotfiles pushed with pipeline spec fix"
+      evidence: "git push succeeded, 43/43 pre-push hook tests"
+      session: 22
+    # Carried forward from session 21
+    - claim: "Statusline icons always visible"
+      evidence: "User said '同意, 对了'"
+      session: 20
+    - claim: "design-pre-gate uses additionalContext not deny"
+      evidence: "Code changed, tests updated (43/43)"
+      session: 20
+    - claim: "Agent hooks registered in settings.json"
+      evidence: "All 3 verified firing in session 21"
+      session: 20
+    - claim: "Task Router and Pipeline Engine are separate layers"
+      evidence: "User agreed after naming discussion"
+      session: 20
+    - claim: "settings.json in dotfiles with portable paths"
+      evidence: "Committed, pushed, 43/43 tests pass"
+      session: 21
+    - claim: "All hook JSONL logging uses jq -cn --arg"
+      evidence: "All hooks fixed, committed, pushed"
+      session: 21
+    - claim: "noGlaze case mismatch fixed, 25/25 tests"
+      evidence: "Tests 23-25 exercise the exact broken path"
+      session: 21
+    - claim: "11/11 paper extractions complete"
+      evidence: "All pass validate-extraction.sh, 6-9 claims each"
+      session: 21
+    - claim: "Session Retrospective Protocol with severity gating"
+      evidence: "Added to sops.md, session-retro.sh created, research integrated"
+      session: 21
+    - claim: "Handoff v2.3 with session_profile + pre-audit + post-review"
+      evidence: "SKILL.md updated, pushed to dotfiles"
+      session: 21
+    - claim: "system-map.md created as top-level architecture view"
+      evidence: "knowledge/system-map.md with 12 ideas + connection graph"
+      session: 21
   proposed:
-    - claim: "Gumroad launch-week pricing: $19 now, $29 after April 9"
-      context: "Marketing expert recommended this. User hasn't confirmed the price increase date."
-      session: 11
-    - claim: "Add $0 tier to Gumroad for email capture"
-      context: "Content expert recommended. Not implemented this session."
-      session: 11
-    - claim: "XHS content still needs voice calibration before publishing"
-      context: "v5 has correct framing but voice not yet matched to user's personal style"
-      session: 11
+    - claim: "Blog 'You Need More Than Auto-Compact'"
+      context: "Context VM + handoff gates angle"
+      session: 21
+    - claim: "Four daemon loops (调研/发布/审计/执行) as always-on architecture"
+      context: "User vision, captured in system-map.md"
+      session: 21
+    - claim: "Agent OS Control Panel (TUI → Web → Electron)"
+      context: "Product potential, textual TUI first path"
+      session: 21
+    - claim: "Corpus-level session analysis every ~20 sessions"
+      context: "Zalando pattern, not yet implemented"
+      session: 21
   rejected:
-    - claim: "Self-host Plausible on Oracle VM"
-      reason: "User doesn't have Oracle VM. Cloudflare Web Analytics is free and already set up."
-      session: 11
-    - claim: "Reddit API via PRAW for automated posting"
-      reason: "Blocked by Reddit Responsible Builder Policy review requirement"
-      session: 11
+    - claim: "Use source-reading skill as-is for papers"
+      reason: "Audited REVISE"
+      session: 20
 
 discoveries:
-  - fact: "Chrome MCP blocks reddit.com due to safety restrictions"
-    source: "Attempted navigation returned 'This site is not allowed due to safety restrictions'"
-    session: 11
-  - fact: "Reddit requires Responsible Builder Policy review before API app creation (new as of 2026)"
-    source: "User showed error when trying to create Reddit app"
-    session: 11
-  - fact: "HN has no submission API — read-only only. New accounts need karma for Show HN visibility"
-    source: "Research agent confirmed; user showed Create Account page (no existing account)"
-    session: 11
-  - fact: "Gumroad digital downloads average 293 sales; courses average 115 at $95.74; median price $13"
-    source: "WebSearch: 146K Gumroad products analysis (dev.to/solobillions)"
-    session: 11
-  - fact: "No one else is selling CC leak analysis products on Gumroad (blue ocean or no demand)"
-    source: "WebSearch found zero competing products"
-    session: 11
+  - fact: "Pipeline spec had 9 issues not 7 — explorer agent found 2 more (parallel detection algorithm clarity, artifact validation timing)"
+    source: "Session 22 explorer agent audit"
+    session: 22
+  - fact: "Agent code replicates bad patterns systematically — 3/3 hooks had same JSON injection"
+    source: "Session 21 hook audit"
+    session: 21
+  - fact: "Agent tests avoid failure paths — 22/22 passed by testing PASS path, not BLOCK"
+    source: "Session 21 noGlaze audit"
+    session: 21
+  - fact: "5087 hook fires, 119 DENY, 49 BLOCKED across all sessions"
+    source: "session-retro.sh --all"
+    session: 21
+  - fact: "Galster et al.: only 3.2% of CC repos use hooks, 0% use persistent memory"
+    source: "Paper synthesis"
+    session: 21
 
 constraints:
   - rule: "No research-institute/research-lab names in public content"
-    reason: "Work project names must not appear in blog, commits, or social posts"
+    reason: "Privacy"
     expires: null
-  - rule: "Each .py file must be 150 lines or fewer"
-    reason: "Project rule: if longer, you don't understand the concept well enough"
+  - rule: "QC gate mandatory before publishing"
+    reason: "Dual QC: mechanical + persona"
     expires: null
-  - rule: "Every number in product files must be verified against source (grep/wc -l)"
-    reason: "Session 11 retro: max_turns=25 shipped when actual was 8"
+  - rule: "Never modify settings.json mid-session"
+    reason: "Resets permission cache"
     expires: null
-  - rule: "QC gate mandatory before any product packaging or publishing"
-    reason: "Session 11 retro: 25 issues found across 2 QC passes, none would have been caught without QC"
+  - rule: "Agent-produced artifacts are claims, not facts"
+    reason: "Session 20 trust deficit, session 21 confirmed"
     expires: null
-  - rule: "Preview files get 2x scrutiny — every claim, number, and code block verified"
-    reason: "01-tool-loop.md (the free preview) had the most factual errors of any file"
+  - rule: "All hook JSONL logging must use jq -cn --arg"
+    reason: "echo-based JSON allows injection"
     expires: null
+
+# === COLD TIER ===
 
 state_changes:
   files_created:
-    - "publish/xhs-content-v5.md"
-    - "publish/gumroad-listing.md"
-    - "publish/launch-posts.md"
-    - "publish/reddit-r-claudeai.md"
-    - "publish/twitter-thread.md"
-    - "publish/gates/pre-package-gumroad.sh"
-    - "publish/gates/pre-publish-reddit.sh"
-    - "publish/gates/pre-publish-twitter.sh"
-    - "publish/images/gumroad-cover.png"
-    - "publish/images/gumroad-thumbnail.png"
-    - "preview/01-tool-loop.md"
-    - "preview/experiment-report.md"
-    - "~/.claude/scripts/pre-package-gate.sh"
-    - "~/.claude/scripts/preview-scrutiny.sh"
-    - "~/.claude/scripts/publish-gate.sh"
-    - "~/.claude/memory/feedback_product-launch-retro.md"
+    - "publish/blog-harness-landscape.md"
+    - "publish/blog-2222-is-a-lie.md"
+    - "~/.claude/settings.json.bak"
   files_modified:
-    - "gumroad-package/agent-anatomy-course/ (13 files: QC fixes)"
-    - "README.md (added preview section + Gumroad link)"
-    - "~/.claude/settings.json (3 new hooks)"
-    - "~/.claude/memory/MEMORY.md (added retro reference)"
-    - "~/Developer/personal/blog/quartz/components/SocialLinks.tsx (created + BMC icon fix)"
-    - "~/Developer/personal/blog/quartz.layout.ts (sidebar links)"
-    - "~/Developer/personal/blog/quartz/components/Footer.tsx (reverted to copyright-only)"
-    - "~/Developer/personal/cc-fuel-gauge/ (sensor-actuator split, 14 tests)"
+    - "~/claude-skills/paper-reading/SKILL.md"
+    - "~/.claude/skills/publish-xhs/SKILL.md"
+    - "~/dotfiles/claude/memory/project_pipeline-orchestration-spec.md"
+    - "~/.claude/settings.json (→ symlink to dotfiles)"
   services_deployed: []
   configs_changed:
-    - "~/.claude/settings.json"
+    - "~/.claude/settings.json (symlinked to ~/dotfiles/claude/settings.json)"
 
 session_log:
-  - session: 11
-    date: 2026-04-02
-    summary: "Session 11: full product launch — Gumroad live, Twitter thread posted, Reddit submitted, 2-round QC, 7 failure patterns documented as hooks"
+  - session: 22
+    date: 2026-04-03
+    summary: "Session 22: execution session. 6 P1 tasks from session 21 backlog. 3 SKILL fixes + 2 blog drafts + symlink."
+    profile: "wide, 6done/2new, handoff_quality: 4.3 (prior)"
     tasks:
-      - task: "Correct XHS v4 claim (safety>>quality → enforcement vs evaluation)"
+      - task: "Symlink settings.json (dotfiles → ~/.claude)"
         status: done
-        outcome: "v5 written with corrected framing"
-      - task: "Commit all untracked files in nano-agent-anatomy"
+        outcome: "Symlink created, backup at .bak"
+      - task: "Fix paper-reading SKILL.md"
         status: done
-        outcome: "3 commits: briefs, publish pipeline, content+gumroad"
-      - task: "Push cc-fuel-gauge to GitHub"
+        outcome: "Budget formula corrected, DEPTH-based model selection in Steps 2-4"
+      - task: "Fix publish-xhs SKILL.md"
         status: done
-        outcome: "sensor-actuator handoff split, 14 tests pass, pushed"
-      - task: "Add Buy Me a Coffee to blog sidebar"
+        outcome: "Gates script-backed, Step 7→Steps 4+5, max 2 retries, gate summary table updated"
+      - task: "Fix pipeline-orchestration-spec (9 issues)"
         status: done
-        outcome: "SocialLinks component + BMC icon fix, pushed"
-      - task: "Set up Cloudflare Web Analytics"
+        outcome: "Exit codes 0/1/2, escalate=model upgrade, PASS/REVISE/REJECT, artifact passing, parallel detection"
+      - task: "Harness landscape blog draft"
         status: done
-        outcome: "Already automatic via Cloudflare proxy, no code needed"
-      - task: "QC Gumroad package (2 rounds)"
+        outcome: "2700 words, 11 papers, 4-phase evolution arc, personal failure story woven in"
+      - task: "22/22 is a lie blog draft"
         status: done
-        outcome: "Round 1: 6 blocking. Round 2: 14 issues. All fixed."
-      - task: "Launch: Gumroad publish + Twitter thread + Reddit post"
-        status: done
-        outcome: "Gumroad live, 6-tweet thread posted, Reddit awaiting mod"
-      - task: "Build pre-package and publish QC gates"
-        status: done
-        outcome: "3 gate scripts + 3 hooks registered"
-      - task: "Retro: 7 failure patterns → memory + hooks"
-        status: done
-        outcome: "feedback_product-launch-retro.md + 3 settings.json hooks"
-  - session: 10
-    date: 2026-04-02
-    summary: "Session 10: writer agent produced v4 XHS content. Structure approved, voice wrong."
-    tasks:
-      - task: "Write XHS content via isolated writer agent"
-        status: done
-        outcome: "v4 produced. Structure good, voice too 'tech influencer'"
-  - session: 9
-    date: 2026-04-01
-    summary: "Session 9: 5 rewrites of XHS content, all report tone. Discovered writer isolation needed."
-    tasks:
-      - task: "Rewrite XHS content for platform voice"
-        status: partial
-        outcome: "v1-v3 all report tone. Key insight: writing in analytical context always produces report."
+        outcome: "1050 words, credence good angle, AgentBreeder citation"
+  - session: 21
+    date: 2026-04-03
+    summary: "Session 21: audit-driven wide session. 4 opus auditors (9/14 REVISE), bug fixes, 11/11 papers+synthesis, SRP, system-map, handoff v2.3."
+    profile: "wide, 7done/9new, handoff_quality: 3.7 (prior)"
+  - session: 20
+    date: 2026-04-03
+    summary: "Session 20: executed session 19 backlog. Trust-damaging errors."
+    profile: "wide, 8done/3new"
 
 next_steps:
   - priority: P0
-    task: "Upload zip + description to Gumroad if not done"
-    dependency: "User manual action"
-    context: "Product page is live but may need Content tab zip upload"
+    task: "Fix SRP enforcement — stop hook or handoff pre-gate to trigger SRP at session end"
+    dependency: null
+    context: "Double-loop trigger: designed session 21, skipped session 22. SRP is voluntary → gets skipped"
   - priority: P0
-    task: "Monitor Reddit mod approval and Twitter engagement"
+    task: "Fix session-retro.sh boundary detection (SESSION_START stale from /tmp)"
     dependency: null
-    context: "Reddit may reject — have r/artificial as backup. Twitter thread live."
+    context: "Blocks all per-session metrics. All-time works fine."
   - priority: P1
-    task: "Register HN account, build karma (comment on 3-5 posts), then post Show HN"
-    dependency: "HN account created + karma > threshold"
-    context: "Show HN title ready in publish/launch-posts.md"
+    task: "QC both blog drafts (harness landscape + 22/22) — dual QC: mechanical + persona"
+    dependency: "Drafts exist, ready for QC"
+    context: "Constraint: QC mandatory before publishing"
   - priority: P1
-    task: "Run publish gates on 4 blog posts before publishing to blog"
+    task: "Research brainstorm→execute pattern — prior art, optimal duration, comparison to long-running claims"
     dependency: null
-    context: "Posts have content QC from session 7 but not format gates"
+    context: "See project_session-execution-pattern.md. Session 22: 20min/6tasks/0blocks"
   - priority: P1
-    task: "Calibrate XHS persona with user's actual voice, produce v5 for publishing"
-    dependency: "User voice samples"
-    context: "v5 has correct framing (enforcement vs evaluation) but voice not calibrated"
+    task: "Add quality-per-autonomous-minute to SRP metrics + session-retro.sh"
+    dependency: "P0 session-retro.sh fix"
+    context: "0.3 tasks/min baseline from session 22. No external benchmark exists."
   - priority: P1
-    task: "Gumroad cover image — current one is minimal, content expert says it matters for CTR"
+    task: "Blog 'You Need More Than Auto-Compact' — Context VM + handoff pre-audit/post-review"
     dependency: null
-    context: "Cover generated at publish/images/gumroad-cover.png but could be improved"
+  - priority: P1
+    task: "Blog Arc A #7: stop-gate session 19 story"
+    dependency: null
+  - priority: P1
+    task: "Blog CC buddy easter egg"
+    dependency: null
+  - priority: P1
+    task: "Pipeline Engine Phase 1: ~/.claude/pipelines/ + _registry.yaml"
+    dependency: "Evaluate if session-boundary orchestration is already sufficient first"
+    context: "Session 22 proved handoff brief IS executable spec"
   - priority: P2
-    task: "Add cheatsheet to Gumroad package (1-page: 4 layers + 17 patterns + 4 discrepancies)"
+    task: "Human-facing progress dashboard (report/slides) — delegate to publish pipeline"
     dependency: null
-    context: "User asked about it. Adds value without much effort."
+    context: "Handoff is for agents. Humans need visual PM tracking."
   - priority: P2
-    task: "Restructure Gumroad listing: discrepancies first, file counts last (marketing expert advice)"
+    task: "可信数据分析 layer (10% coverage, biggest gap)"
     dependency: null
-    context: "Both experts said: lead with value (discrepancies), not inventory (20 files)"
   - priority: P2
-    task: "Add $0 Gumroad tier for email capture (content expert advice)"
+    task: "Skill audit: systematic review of all 20 skills"
     dependency: null
-    context: "First unit free as preview, captures emails for follow-up"
   - priority: P2
-    task: "Register platform-style-hook.sh in settings.json"
+    task: "/publish meta-skill routing"
     dependency: null
-    context: "Script exists at ~/.claude/scripts/, not yet registered"
-  - priority: P3
-    task: "Build last30days → XHS auto-publish pipeline"
-    dependency: "last30days + XHS MCP + /schedule"
-    context: "User wants automated daily trending → content pipeline"
+  - priority: P2
+    task: "Corpus-level session analysis (Zalando pattern, ~22 sessions now)"
+    dependency: null
+  - priority: P2
+    task: "Substack strategy"
+    dependency: null
+  - priority: P2
+    task: "Agent OS Control Panel — TUI first, then web/Electron"
+    dependency: "system-map.md data model validated first"
+  - priority: P2
+    task: "Four daemon loops (调研/发布/审计/执行) — always-on tmux agents"
+    dependency: "S2+P3+S3 click. Design in system-map.md"
 
-resume_command: "read /Users/zl190/Developer/personal/nano-agent-anatomy/briefs/session11-brief.md then execute next steps"
+resume_command: "read ~/Developer/personal/nano-agent-anatomy/briefs/session22-brief.md then execute next steps"
