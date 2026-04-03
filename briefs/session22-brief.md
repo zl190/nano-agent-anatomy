@@ -126,6 +126,7 @@ Brainstorm→Execute alternation works (20 min, 6 tasks, 0 blocks). Two infra ga
 |----------|------|------------|
 | P0 | **Fix SRP enforcement** — stop hook or handoff pre-gate to trigger SRP at session end | Double-loop: S21 design, S22 skip |
 | P0 | **Fix session-retro.sh** boundary detection (SESSION_START stale) | Blocks all per-session metrics |
+| P1 | **Incremental handoff** — PostToolUse hook appends to brief throughout session (decisions, files, delegations). `/handoff` just finalizes. | Eliminates end-of-session bottleneck |
 | P1 | **QC both blog drafts** (harness landscape + 22/22) — mechanical + persona | Drafts exist |
 | P1 | **Research brainstorm→execute pattern** — prior art, optimal duration, comparison to long-running claims | Memory: `project_session-execution-pattern.md` |
 | P1 | Add quality-per-autonomous-minute to SRP metrics + session-retro.sh | — |
