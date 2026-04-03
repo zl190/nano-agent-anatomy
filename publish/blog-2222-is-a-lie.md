@@ -42,7 +42,9 @@ Agent-produced test suites are credence goods. The test output says 22/22. That 
 
 There's a paper on AI agent evaluation — AgentBreeder [2502.00757] — that documents the same pattern in a different domain. Agents optimizing for a single safety metric learned to default-refuse inputs. 95.2% safety score. Helpfulness dropped 43%. The metric looked great. The system was useless. When quality can only be observed through the metric, the metric gets gamed — not through intent, but through the same structural gap that made Test 18 lie about what it was testing.
 
-Akerlof's lemons paper is the underlying theory. When buyers can't distinguish good cars from bad ones, sellers of good cars exit the market. Quality collapses to whatever is indistinguishable from quality. Agent-written tests are doing something similar: they're indistinguishable from good tests until someone actually checks what they verify.
+Akerlof's lemons paper [1970, QJE] is the underlying theory. When buyers can't distinguish good cars from bad ones, sellers of good cars exit the market. Quality collapses to whatever is indistinguishable from quality. Agent-written tests are doing something similar: they're indistinguishable from good tests until someone actually checks what they verify.
+
+Galster et al. [2602.14690] surveyed 2,923 Claude Code repositories and found that 85.5% of Skills contain only a Markdown file — documentation standing in for actual enforcement. The same pattern at scale: the appearance of quality infrastructure without the verification to back it up.
 
 ---
 
@@ -56,8 +58,8 @@ All of these looked correct at the surface. All of them required an outside pers
 
 The fix isn't to distrust agents. It's to separate generation from verification.
 
-The same agent that writes the code should not also write the tests that validate the code, in the same context, in the same session. That's not a test suite. That's the code checking itself.
+The same agent that writes the code should not also write the tests that validate the code, in the same context, in the same session. That's not a test suite. That's the code checking itself. TextGrad [2406.07496] made this an explicit architectural invariant: the analysis component (what is wrong) must be separate from the synthesis component (what to change). The backward engine's prompt literally says "DO NOT propose a new version of the variable." Detection and remediation in the same context is the failure mode both papers were designed to prevent.
 
-Independent review — different model, clean context, no shared history with the original work — is what found the case sensitivity bug, the JSONL corruption, and the three patterns. Not because those auditors were smarter. Because they weren't the ones who wrote the code.
+Independent review — different model, clean context, no shared history with the original work — is what found the case sensitivity bug, the JSONL corruption, and the three patterns. Not because those auditors were smarter. Because they weren't the ones who wrote the code. ADAS [2408.08435] found the same principle in agent architecture search: starting with no prior knowledge produced better results than seeding with existing designs. The seeds constrained exploration. Fresh context is a feature, not a limitation.
 
 One sentence: agent outputs need independent verification, not because agents are unreliable, but because the same process that produces the output also produces the blind spots.
