@@ -10,6 +10,11 @@
 - **Pipeline spec exit codes**: 0=PASS, 1=REVISE (fixable), 2=REJECT (unfixable). Unified 3-state verdicts everywhere. `escalate` = model upgrade only (never step-reroute).
 - **Two blog drafts exist but need QC**: `publish/blog-harness-landscape.md` (2700w, 11 papers) and `publish/blog-2222-is-a-lie.md` (1050w). Neither has passed dual QC gate.
 - **settings.json is now a symlink**: `~/.claude/settings.json` → `~/dotfiles/claude/settings.json`. Backup at `.bak`.
+- **Brainstorm→Execute alternation pattern**: session boundary IS the phase separator. Handoff brief IS the executable spec. 20 min/6 tasks/0 blocks. MVP of 自动编排. See `project_session-execution-pattern.md`.
+- **CC Agent Teams**: experimental but already enabled. Split-pane tmux, colored borders, shared task list with dependencies, 3 hook events (TeammateIdle, TaskCreated, TaskCompleted). 7x token cost. May replace Pipeline Engine. See `knowledge/cc-agent-teams.md`.
+- **Handoff todo loader**: SessionStart hook parses `handoff.yaml` next_steps → outputs task list. CLAUDE.md step 4 tells agent to create TaskCreate entries. Populates Ctrl+T.
+- **Agent output registry**: Stop hook indexes all agent transcripts from /tmp to `agent-output-registry.jsonl`. Files stay in /tmp (persist until reboot). `--persist` flag for selective copy. 132KB registry vs 72MB copy.
+- **5 blog ideas/drafts this session**: harness landscape (draft), 22/22 (draft), bad management (idea), /tmp registry (idea), "20 min zero blocks" (title only).
 
 ## What Was Decided
 
@@ -20,6 +25,13 @@
 5. Harness landscape blog draft written (4-phase evolution, 5 convergence conclusions, personal failure story)
 6. "22/22 is a lie" blog draft written (credence good angle, AgentBreeder citation)
 7. Dotfiles pushed (pipeline spec commit 65023c0, 43/43 hook tests)
+8. Handoff todo loader implemented (SessionStart hook + CLAUDE.md step 4)
+9. Agent output registry: Stop hook indexes /tmp transcripts to JSONL (132KB vs 72MB copy)
+10. Agent Teams deep dive: 7 findings, 5 conclusions, 5 use cases, saved to `knowledge/cc-agent-teams.md`
+11. Brainstorm→Execute alternation pattern documented in `project_session-execution-pattern.md`
+12. 3 blog ideas captured: management/micromanagement, /tmp registry, "20 min zero blocks"
+13. SRP run manually — found 2 enforcement gaps (no hook, broken session boundary detection)
+14. 8 agent output transcripts saved to `harness-research/reports/session22-*.md`
 
 ## Corrections
 
@@ -37,6 +49,15 @@
 | `~/.claude/settings.json` | SYMLINKED | → ~/dotfiles/claude/settings.json |
 | `publish/blog-harness-landscape.md` | CREATED | 2700w harness evolution blog draft |
 | `publish/blog-2222-is-a-lie.md` | CREATED | 1050w credence good blog draft |
+| `publish/blog-idea-management-attention.md` | CREATED | Blog idea: micromanagement ≈ context degradation |
+| `publish/blog-idea-tmp-registry.md` | CREATED | Blog idea: index don't copy, /tmp is already right |
+| `~/.claude/scripts/handoff-todo-loader.sh` | CREATED | SessionStart hook: handoff → Ctrl+T tasks |
+| `~/.claude/scripts/save-agent-outputs.sh` | CREATED | Stop hook: index agent transcripts from /tmp |
+| `~/.claude/CLAUDE.md` | UPDATED | Step 4: create tasks from handoff todo loader |
+| `~/.claude/memory/project_session-execution-pattern.md` | CREATED | Brainstorm→Execute alternation pattern |
+| `~/.claude/memory/knowledge/cc-agent-teams.md` | CREATED | Agent Teams deep dive (7F, 5C, 5UC) |
+| `~/.claude/logs/agent-output-registry.jsonl` | CREATED | 257 entries, 132KB |
+| `harness-research/reports/session22-*.md` | CREATED | 8 agent output transcripts preserved |
 
 ## Recent Tool Results
 
@@ -45,11 +66,19 @@
 | Agent (Explore) | Find 3 SKILL files + audit details | Found all 3 files + 9 specific pipeline issues from rationale.md |
 | Agent (sonnet, blog-harness) | Write harness landscape blog | 2700w draft at publish/blog-harness-landscape.md |
 | Agent (sonnet, blog-2222) | Write 22/22 blog | 1050w draft at publish/blog-2222-is-a-lie.md |
-| Bash | git push ~/dotfiles | 43/43 hook tests pass, pushed to origin/main |
+| Bash | git push ~/dotfiles | 43/43 hook tests pass, pushed to origin/main (5 pushes total this session) |
+| Agent (cc-guide) | Research CC Agent Teams | 18-section deep dive: hooks, costs, display modes, adoption strategy |
+| Agent (Explore) | Research autonomous agent duration | 30-50K token cliff, 39% multi-turn degradation, no quality/min metric exists |
 
 ## User Decisions (verbatim)
 
 > "read session21-brief.md then execute next steps" — User delegated full execution of P0+P1 backlog
+
+> "if they are alive until reboot in /tmp, maybe it's already a good design... maybe we only need a index or registry" — User challenged persistence design, led to registry-over-copy pattern
+
+> "worth a blog" — User recognizes /tmp registry insight as publishable content
+
+> "can the handoff delivery be written during the session and be triggered out the hook?" — User wants incremental handoff, not end-of-session bottleneck
 
 ## Constraints
 
@@ -63,12 +92,13 @@
 
 | Metric | Value |
 |--------|-------|
-| Backlog: start → end | 1P0+8P1+7P2 → 0P0+5P1+7P2 |
-| Tasks completed / added | 6 done, 2 new (QC tasks for blog drafts, Pipeline Engine unblocked) |
-| Type | **wide** (3 SKILL fixes + 2 blog drafts + symlink + dotfiles push) |
-| Directories touched | 4 (claude-skills, ~/.claude/skills, ~/dotfiles, nano-agent-anatomy/publish) |
-| Delegations | 3 (67% background) |
-| Duration (est) | ~20 min |
+| Backlog: start → end | 1P0+8P1+7P2 → 2P0+9P1+8P2 |
+| Tasks completed / added | 6 execution + 4 infra built = 10 done, 7 new |
+| Type | **wide** (execution phase 20min + brainstorm phase ~40min) |
+| Directories touched | 7 (claude-skills, ~/.claude/skills, ~/dotfiles, publish, harness-research/reports, ~/.claude/scripts, ~/.claude/logs) |
+| Delegations | 9 total (2 blog builders bg, 1 explore, 3 cc-guide, 1 autonomous-research, 2 internal) |
+| Duration (est) | ~60 min |
+| Git pushes | 5 to dotfiles (43/43 each), 2 to nano-agent-anatomy |
 
 ## SRP — Session 22 Retrospective
 
