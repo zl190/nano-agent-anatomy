@@ -3,25 +3,25 @@ You are compiling the final experiment report for a source code reading SOP comp
 ## Your task
 
 1. Read the experiment spec:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/experiment-spec.json
+   experiment/experiment-spec.json
 
 2. Read the blind evaluation results:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/eval/blind-eval-results.json
+   experiment/eval/blind-eval-results.json
 
 3. Read the unblinding key:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/blind/UNBLIND_KEY.txt
+   experiment/blind/UNBLIND_KEY.txt
 
 4. Read v1 metrics:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/v1/metrics-v1.json
+   experiment/v1/metrics-v1.json
 
 5. Read v2 metrics:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/metrics-v2-run1.json
+   experiment/metrics-v2-run1.json
 
 6. Read the existing review paper:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/review-source-reading-agents.md
+   review-source-reading-agents.md
 
 7. Compile the final report at:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/report/experiment-report.md
+   experiment/report/experiment-report.md
 
    Include:
    - Experiment design summary

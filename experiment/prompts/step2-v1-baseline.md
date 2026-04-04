@@ -25,7 +25,7 @@ Pattern: Scout → Reader × N → Synthesizer
 ## Your task
 
 Read the experiment spec file at:
-/Users/zl190/Developer/personal/nano-agent-anatomy/experiment/experiment-spec.json
+experiment/experiment-spec.json
 
 Use the SAME 6 file assignments from the spec (controlled variable).
 
@@ -48,7 +48,7 @@ Read the files and provide a thorough analysis. Focus on what's architecturally 
 That's the entire reader prompt. No JSON schema. No persona. No validation requirements.
 
 After all 6 readers complete, save each reader's raw output to:
-/Users/zl190/Developer/personal/nano-agent-anatomy/experiment/v1/reader-{N}-{name}.md
+experiment/v1/reader-{N}-{name}.md
 
 Then launch a synthesizer agent (model: opus) with this prompt:
 
@@ -64,10 +64,10 @@ Synthesize:
 ```
 
 Save the synthesis to:
-/Users/zl190/Developer/personal/nano-agent-anatomy/experiment/v1/synthesis-v1.md
+experiment/v1/synthesis-v1.md
 
 Finally, save metrics to:
-/Users/zl190/Developer/personal/nano-agent-anatomy/experiment/v1/metrics-v1.json
+experiment/v1/metrics-v1.json
 
 Include: tokens consumed per reader, duration, number of symbols/patterns/surprises extracted (count manually from the free-form text).
 

@@ -1,5 +1,5 @@
 """
-nano-agent-anatomy: The nanoGPT of AI agents.
+A study notebook for production AI agent architecture.
 5 files, 500 lines, 5 layers of a production agent system.
 
 Usage:
@@ -25,7 +25,7 @@ PERMISSION_MODES = {
 
 
 def main():
-    parser = argparse.ArgumentParser(description="nano-agent-anatomy")
+    parser = argparse.ArgumentParser(description="agent anatomy study notebook")
     parser.add_argument("--memory", action="store_true", help="Enable persistent memory")
     parser.add_argument("--compress", action="store_true", help="Enable context compression")
     parser.add_argument("--coordinate", type=str, help="Multi-agent mode: delegate task to workers")

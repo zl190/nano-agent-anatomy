@@ -88,7 +88,7 @@ Code progression: `memory_v0.py` (append-only) → `memory_v1.py` (MEMORY.md ind
 
 The biggest surprise in the source: context compression in production is LLM-based, not deterministic. The claw-code Rust port (the clean reimplementation with tests) does deterministic extraction. CC TypeScript sends a structured 9-section prompt with an `<analysis>` scratchpad that gets stripped before the result reaches context. That discrepancy — two implementations of the same feature with completely different approaches — is where the learning is.
 
-Also documented: Berkeley's absence of coverage. All three iterations of CS294 (Fall 2024, Spring 2025, Fall 2025 — 45 lectures total) have zero coverage of context compression. See `publish/blog-curriculum-gap.md`.
+Also documented: Berkeley's absence of coverage. All three iterations of CS294 (Fall 2024, Spring 2025, Fall 2025 — 45 lectures total) have zero coverage of context compression.
 
 Code progression: `context_v0.py` (naive summarize) → `context_v1.py` (deterministic, claw-code pattern) → `context_v2.py` (LLM-based, CC TS pattern) → `context_v3.py` (NO_TOOLS_PREAMBLE + dual trigger) → `context_v4.py` (correction-aware microcompact — novel)
 
@@ -144,11 +144,7 @@ nano-agent-anatomy/
 │   ├── 00-pedagogical-research.md          # design rationale (Karpathy method)
 │   └── 00-source-validation-audit.md       # 5-source audit with URLs
 ├── experiment/                             # blind A/B reading experiment data
-└── publish/                                # 4 blog posts
-    ├── blog-context-degradation.md
-    ├── blog-context-pollution.md
-    ├── blog-credence-good-berkeley.md
-    └── blog-curriculum-gap.md
+└── notes/                                  # methodology + source analysis (continued)
 ```
 
 ## Rules
@@ -168,7 +164,7 @@ Read a full sample note and the blind experiment report before buying anything:
 
 The code is open. The detailed notes, exercises, cross-validation audit, and correction log are available separately:
 
-**[Agent Anatomy — Full Analysis →](https://yclab.gumroad.com/l/agent-internals)**
+**Agent Anatomy — Full Analysis** (link coming soon)
 
 What's in the course that's not in this repo:
 - Full 5-source cross-validation analysis per unit (CC TS × claw-code × Berkeley MOOC × Anthropic Eng Blog × Agent SDK — where they disagree is where the insight is)

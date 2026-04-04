@@ -14,7 +14,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-MEMORY_DIR = Path.home() / ".nano-agent-anatomy" / "memory"
+MEMORY_DIR = Path.home() / ".agent-anatomy" / "memory"
 INDEX_FILE = MEMORY_DIR / "MEMORY.md"
 MAX_INDEX_LINES = 50
 

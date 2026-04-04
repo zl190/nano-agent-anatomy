@@ -2,3 +2,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+
+# Internal session data — not for public consumption
+briefs/
+publish/
+gumroad-package/
+harness-research/
+RESUME.md
+ROADMAP.md
+handoff.yaml

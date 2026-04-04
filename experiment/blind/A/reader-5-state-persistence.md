@@ -628,7 +628,7 @@ When multiple agents background-run in the same process, AppState is not thread-
 
 ---
 
-## Adoptable Patterns for nano-agent-anatomy
+## Adoptable Patterns for This Project
 
 | Pattern | Source | How to adopt |
 |---|---|---|

@@ -3,7 +3,7 @@ Tests for memory_v0 and memory_v1.
 Tests are structural and deterministic — no API key required.
 
 Note: memory_v1._write_memory uses a module-level INDEX_FILE constant.
-Tests patch it to a temp directory to avoid polluting ~/.nano-agent-anatomy/.
+Tests patch it to a temp directory to avoid polluting ~/.agent-anatomy/.
 """
 
 import sys

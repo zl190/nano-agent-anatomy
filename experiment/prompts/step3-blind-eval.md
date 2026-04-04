@@ -3,13 +3,13 @@ You are an independent evaluator for a source code reading experiment. You will 
 ## Your task
 
 1. Read the anonymized outputs:
-   - /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/blind/A/
-   - /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/blind/B/
+   - experiment/blind/A/
+   - experiment/blind/B/
 
    Each directory contains 6 reader outputs + 1 synthesis.
 
 2. Read the evaluation rubric:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/blind-eval-rubric.md
+   experiment/blind-eval-rubric.md
 
 3. For each reader pair (A-reader-1 vs B-reader-1, etc.), score on the rubric dimensions.
 
@@ -21,7 +21,7 @@ You are an independent evaluator for a source code reading experiment. You will 
    - Check: are confidence levels present on claims?
 
 6. Write your evaluation to:
-   /Users/zl190/Developer/personal/nano-agent-anatomy/experiment/eval/blind-eval-results.json
+   experiment/eval/blind-eval-results.json
 
    Format:
    ```json

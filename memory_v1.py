@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-MEMORY_DIR = Path.home() / ".nano-agent-anatomy" / "memory"
+MEMORY_DIR = Path.home() / ".agent-anatomy" / "memory"
 INDEX_FILE = MEMORY_DIR / "MEMORY.md"
 
 # 50 lines keeps the index under ~3KB — small enough to include in every
